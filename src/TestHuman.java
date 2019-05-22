@@ -34,7 +34,7 @@ public class TestHuman {
         }
         
 	Chromosome c = new Chromosome(rnd, sl, 12, 2);
-	c.stringInitialize("0," + "2517,71,161,989,40,1302,1012,2679,548,191,88,2250");
+	c.stringInitialize("0," + "2517,71,20,987,40,1302,1012,2679,548,191,88,2250");
 	MarioGame game = new MarioGame();
 	game.playGame(c.toString(), 20);
     }

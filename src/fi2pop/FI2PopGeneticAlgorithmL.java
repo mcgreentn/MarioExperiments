@@ -13,6 +13,13 @@ import shared.ScenesLibrary;
 import shared.SlicesLibrary;
 
 public class FI2PopGeneticAlgorithmL {
+	/*
+	 * Example of _playthroughMechanics -> each entry is a gene of chromosome
+	 * 		[ "0,0,1,0,0,0,0,0,0,0,0,0",
+	 * 		  "0,0,0,0,0,0,0,0,0,0,0,0",
+	 * 		  "0,0,0,0,0,1,0,0,0,0,1,1",
+	 * 		  "0,1,1,0,0,0,0,0,0,1,0,0"]
+	 */
 	private ChromosomeL[] _population;
 	private int _populationSize;
 	private int _chromosomeLength;
@@ -106,6 +113,8 @@ public class FI2PopGeneticAlgorithmL {
 	
 	public void getNextGeneration() {
 		ChromosomeL[][] feasibleInfeasible = this.getFeasibleInfeasible(false);
+		System.out.println("size of feasible " + feasibleInfeasible[0].length);
+		System.out.println("size of infeasible " + feasibleInfeasible[1].length);
 		ChromosomeL[] newPopulation = new ChromosomeL[this._populationSize];
 		for (int i = 0; i < this._populationSize - this._elitism; i++) {
 			ChromosomeL[] usedPopulation = feasibleInfeasible[1];
@@ -116,7 +125,7 @@ public class FI2PopGeneticAlgorithmL {
 			ChromosomeL child = (ChromosomeL)parent1.clone();
 			if (this._rnd.nextDouble() < this._crossover) {
 				ChromosomeL parent2 = this.rankSelection(usedPopulation);
-				child = (ChromosomeL)parent1.crossover(parent2);
+				child = (ChromosomeL)parent1.crossover(parent2);				
 				if (this._rnd.nextDouble() < this._mutation) {
 					child = (ChromosomeL)child.mutate();
 				}

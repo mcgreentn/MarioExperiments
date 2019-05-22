@@ -1,31 +1,30 @@
 package shared;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
 class SingleScene{
-	private String scene;
 	private String sceneFitness;
+	private String[] scene;
 	private String[] arrayedScenesMechanics;
 	
 	public SingleScene() {
-		this.scene = new String();
 		this.sceneFitness = new String();
+		this.scene = new String[0];
 		this.arrayedScenesMechanics = new String[0];
 	}
 	
 	public void makeSingleScene(String[] sceneMechanics, String fitness, String[] scene) {
 		this.arrayedScenesMechanics = sceneMechanics;
 		this.sceneFitness = fitness;
-		for(int i = 0; i < scene.length; i++) {
-			this.scene += scene[i];
-		}
+		this.scene = scene;
 	}
 	
-	public String getScene() {
+	public String[] getScene() {
 		return this.scene;
 	}
 	public String getSceneFitness() {
@@ -72,26 +71,36 @@ public class ScenesLibrary {
 	}
 	
 	public int getNumberOfScenes() {
-		return this.numberOfScenes;
+//		return this.library.size();
+		return this.arrayedScenesMechanics.length;
+	}
+	public String[][] getArrayedScenesMechanics() {
+		return this.arrayedScenesMechanics;
 	}
 	//get scene based off index
-	public String getScene(int index) {
+	public String[] getScene(int index) {
 		String [] mechanicsTemp = this.getSceneMechanics(index);
-		for(int i = 0; i < mechanicsTemp.length; i++) {
-			System.out.print(mechanicsTemp[i]);
-		}
 		ArrayList<SingleScene> sceneTempList = this.library.get(mechanicsTemp);
 		SingleScene singleSceneTemp = sceneTempList.get(this.randObj.nextInt(sceneTempList.size()));
 		return singleSceneTemp.getScene();
 	}
 	//get scene based off mechanics
-	public String getScene(String[] mechnicsSceneInclude) {
-		ArrayList<SingleScene> sceneTempList = this.library.get(mechnicsSceneInclude);
+	public String[] getScene(String[] mechanicsSceneInclude) {
+		ArrayList<SingleScene> sceneTempList = this.library.get(mechanicsSceneInclude);
 		if(sceneTempList.size() == 0) {
-			return "";
+			return new String[0];
 		}
 		SingleScene singleSceneTemp = sceneTempList.get(this.randObj.nextInt(sceneTempList.size()));
 		return singleSceneTemp.getScene();
+	}
+	//get index based off mechanics
+	public int getSceneIndex(String[] mechanicsSceneInclude) {
+		for(String[] s : this.scenesMechanicsArrayList) {
+			if (Arrays.deepEquals(s, mechanicsSceneInclude)) {
+				return this.scenesMechanicsArrayList.indexOf(s);
+			}
+		}
+		return -1;
 	}
 	public String[] getSceneMechanics(int index) {
 		return this.arrayedScenesMechanics[index];
