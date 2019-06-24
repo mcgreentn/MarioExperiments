@@ -59,6 +59,66 @@ public class FI2PopGeneticAlgorithmL {
 		}
 	}
 	
+	public ArrayList<ArrayList<String>> poolOfLevels(){
+		int level = this._chromosomeLength;
+		
+		ArrayList<ArrayList<String>> possibleLevels = new ArrayList<ArrayList<String>>();
+	    for(int i = 0; i < this._playthroughMechanics.length; i++){
+	      if(possibleLevels.size() == 0){
+	        for(int j = 0; j < level; j++){
+	          ArrayList<String> t = new ArrayList<String>();
+	          for (int k = 0; k < level; k++){
+	            t.add("-");
+	          }
+	          if(this._lib.getSceneIndex(this._playthroughMechanics[i]) != -1) {
+		          t.set(j, this._playthroughMechanics[i]);
+		          possibleLevels.add(t);
+	          }
+	        }
+	      } else{
+	        ArrayList<ArrayList<String>> toAdd = new ArrayList<ArrayList<String>>();
+	        for(int j = 0; j < possibleLevels.size(); j++){
+	          ArrayList<String> temp = new ArrayList<String>(possibleLevels.get(j));
+	          int pos = 0; 
+	          for(int k = temp.size()-1; k > -1; k--){
+	            if(temp.get(k) != "-"){
+	              pos = k;
+	              break;
+	            }
+	          }
+	          for(; pos < level; pos++){
+	            ArrayList<String> tempToAdd = new ArrayList<String>(temp);
+	            if(tempToAdd.get(pos) == "-"){
+	            	if(this._lib.getSceneIndex(this._playthroughMechanics[i]) != -1) {
+	            		tempToAdd.set(pos, this._playthroughMechanics[i]);
+	            	}
+	            } else{
+	              String t = tempToAdd.get(pos);
+	              StringBuilder mechanicString = new StringBuilder(t);
+	              for(int z = 0; z < mechanicString.length(); z++){
+	                if(mechanicString.charAt(z) - '1' != 0){
+	                  mechanicString.setCharAt(z, this._playthroughMechanics[i].charAt(z));
+	                }
+	              }
+	              if(this._lib.getSceneIndex(mechanicString.toString()) != -1) {
+	            	  tempToAdd.set(pos, mechanicString.toString());
+	              }
+	            }
+	            toAdd.add(tempToAdd);
+	          }
+	          
+	        }
+	        possibleLevels = toAdd;
+	      }
+	    }
+	    for(int i = 0; i < possibleLevels.size(); i++){
+	        while(possibleLevels.get(i).indexOf("-") != -1){
+	        	possibleLevels.get(i).set(possibleLevels.get(i).indexOf("-"), "000000000000");
+	        }
+	    }
+	    return possibleLevels;
+	}
+	
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {

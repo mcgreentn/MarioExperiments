@@ -49,6 +49,14 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		this._listOfPossibleMechanics = new String[] {"Mario Jumps", "Low Jump", "High Jump", "Short Jump", "Long Jump", "Stomp Kill", "Shell Kill", "Fall Kill", "Mario Mode", "Coins Collected", "Bumping Brick Block", "Bumping Question Block"};
 	}
 
+	public void stringInitialize(String level) {
+		String[] parts = level.split(",");
+		this._age = Integer.parseInt(parts[0]);
+		for (int i = 0; i < this._genes.length; i++) {
+			this._genes[i] = Integer.parseInt(parts[i + 1]);
+		}
+	}
+	
 	public ChromosomeL clone() {
 		ChromosomeL chromosome = new ChromosomeL(this._rnd, this._library, this._numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene);
 		for(int i=0; i < this._genes.length; i++) {
@@ -87,41 +95,25 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	private int calcAvgMechanics() {
 		int avg_mechanics = 3;
 		if(this._variableNumOfMechInScene) {
-			avg_mechanics = (int)(this._numMechanicsInPlaythrough/this._numOfScenes);
+			avg_mechanics = (int) Math.ceil((double)this._numMechanicsInPlaythrough/this._numOfScenes);
 		}
 		return avg_mechanics;
 	}
 
 	private void createGeneRandomly(int index, int avg_mechanics) {
-		int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
-		this._genes[index] = sceneIndex;
-		String[] arrayedMechanicsToUse = this._library.getSceneMechanics(sceneIndex);
-		
-		int num_mechanics = 0;
-		for(int i = 0; i < arrayedMechanicsToUse.length; i++) {
-			if(arrayedMechanicsToUse[i].equals("1")) {
-				num_mechanics += 1;
-			}
-		}
-		while(num_mechanics != avg_mechanics) {
+		int sceneIndex;
+		String mechanicsToUseString;
+		int num_mechanics;
+		do {
 			sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
 			this._genes[index] = sceneIndex;
-			arrayedMechanicsToUse = this._library.getSceneMechanics(sceneIndex);
-			num_mechanics = 0;
-			for(int i = 0; i < arrayedMechanicsToUse.length; i++) {
-				if(arrayedMechanicsToUse[i].equals("1")) {
-					num_mechanics += 1;
-				}
-			}
-		}
-		
-		String temp2 = Arrays.toString(arrayedMechanicsToUse);
-	    temp2 = temp2.substring(1, temp2.length()-1).replace(",", " ").replace(" ", "");
-	    this._populationMechanics.add(temp2);
+			mechanicsToUseString = this._library.getSceneMechanics(sceneIndex);
+			num_mechanics = (int) mechanicsToUseString.chars().filter(num -> num == '1').count();
+		} while(num_mechanics != avg_mechanics);
+	    this._populationMechanics.add(mechanicsToUseString);
 	}
 	public void randomInitialization() {
 		int avg_mechanics = calcAvgMechanics();
-		
 		//create the genes
 		int i;
 		for(i = 0; i < this._genes.length-1; i++) {
@@ -129,7 +121,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		}
 		//the last gene will have the remaining scenes (in case of an uneven split)
 		avg_mechanics = this._numMechanicsInPlaythrough - avg_mechanics * (this._genes.length-1);
-		if(!this._variableNumOfMechInScene) {
+		if(!this._variableNumOfMechInScene || avg_mechanics < 0) {
 			avg_mechanics = 3;
 		}
 		this.createGeneRandomly(i, avg_mechanics);
@@ -138,16 +130,60 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public void smartInitialization() {
 		//create the gene in a smart way
 		//guarantee the mechanics will occur in that order
-		int i;
-		for(i = 0; i < this._genes.length; i++) {
-			String[] tempStringArray = this._playthroughMechanics[i].split(",");
-			int tempIndex = this._library.getSceneIndex(tempStringArray);
-			this._genes[i] = tempIndex;
-			
-			String temp = Arrays.toString(tempStringArray);
-		    temp = temp.substring(1, temp.length()-1).replace(",", " ").replace(" ", "");
-		    this._populationMechanics.add(temp);
+		ArrayList<String> levelMechanics = new ArrayList<String>();
+		for(int i = 0; i < this._numOfScenes; i++) {
+			levelMechanics.add("000000000000");
 		}
+		
+		int sceneIndex = 0;
+		int playthroughMechanicIndex = 0;
+		while(sceneIndex < this._numOfScenes) {
+			float probability = this._rnd.nextFloat();
+			int numScenesToSkip = probability < 0.85 ? 0 : (probability < 0.95 ? 1: 2);
+			sceneIndex += numScenesToSkip;
+			if(sceneIndex >= this._numOfScenes) {
+				break;
+			}
+			String t = levelMechanics.get(sceneIndex);
+			StringBuilder mechanicString = new StringBuilder(t);
+			for(int z = 0; z < mechanicString.length(); z++){
+				if(mechanicString.charAt(z) - '1' != 0){
+                  mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
+                }
+			}
+			//check if it is in scenelibrary
+			if(this._library.getSceneIndex(mechanicString.toString()) != -1) {
+				levelMechanics.set(sceneIndex, mechanicString.toString());
+			} else {
+				sceneIndex += 1;
+				if(sceneIndex >= this._numOfScenes) {
+					break;
+				} else {
+					levelMechanics.set(sceneIndex, this._playthroughMechanics[playthroughMechanicIndex]);
+				}
+			}
+			playthroughMechanicIndex += 1;
+		}
+		//stuff left over playthroughMechanics into the end
+		while(playthroughMechanicIndex < this._playthroughMechanics.length) {
+			String t = levelMechanics.get(this._numOfScenes-1);
+			StringBuilder mechanicString = new StringBuilder(t);
+			for(int z = 0; z < mechanicString.length(); z++){
+				if(mechanicString.charAt(z) - '1' != 0){
+                  mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
+                }
+			}
+			//check if it is in scenelibrary
+			if(this._library.getSceneIndex(mechanicString.toString()) != -1) {
+				levelMechanics.set(this._numOfScenes-1, mechanicString.toString());
+			} 
+			playthroughMechanicIndex += 1;
+		}
+		for(int i = 0; i < levelMechanics.size(); i++) {
+			int tempIndex = this._library.getSceneIndex(levelMechanics.get(i));
+			this._genes[i] = tempIndex;
+		}
+		this._populationMechanics = levelMechanics;
 	}
 
 	public void childEvaluationInitialization(String values) {
@@ -202,9 +238,14 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	}
 
 	private ArrayList<String> reduceMechanicsToActions(String[] mechanicsToReduceArrayExcess) {
-		ArrayList<String> agentMechanics = new ArrayList<String>();
-		for(int i = 0; i < mechanicsToReduceArrayExcess.length; i++) {
-			String mechInfo = mechanicsToReduceArrayExcess[i];
+		ArrayList<String> mechanicsAL = new ArrayList<String>(Arrays.asList(mechanicsToReduceArrayExcess));
+		
+		ArrayList<String> to_return = new ArrayList<String>();
+		
+		for(int i = 0; i < mechanicsAL.size(); i++) {
+			StringBuilder mechanicString = new StringBuilder("000000000000");
+			ArrayList<String> agentMechanics = new ArrayList<String>();
+			String mechInfo = mechanicsAL.get(i);
 			String starter = "Action\":\"";
 			while(mechInfo.indexOf(starter) != -1) {
 				int index = mechInfo.indexOf(starter);
@@ -214,8 +255,57 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				agentMechanics.add(action);	
 				mechInfo = actionExcess.substring(actionStopIndex);
 			}
+			for(int j = 0; j < agentMechanics.size(); j++) {
+				String triggeredMech = agentMechanics.get(j);
+				switch(triggeredMech) {
+//				case "Mario Jumps":
+//					mechanicString.setCharAt(0, '1');
+//					break;
+				case "Low Jump":
+					mechanicString.setCharAt(0, '1');
+					mechanicString.setCharAt(1, '1');
+					break;
+				case "High Jump":
+					mechanicString.setCharAt(0, '1');
+					mechanicString.setCharAt(2, '1');
+					break;
+				case "Short Jump":
+					mechanicString.setCharAt(0, '1');
+					mechanicString.setCharAt(3, '1');
+					break;
+				case "Long Jump":
+					mechanicString.setCharAt(0, '1');
+					mechanicString.setCharAt(4, '1');
+					break;
+				case "Stomp Kill":
+					mechanicString.setCharAt(5, '1');
+					break;
+				case "Shell Kill":
+					mechanicString.setCharAt(6, '1');
+					break;
+				case "Fall Kill":
+					mechanicString.setCharAt(7, '1');
+					break;
+				case "Mario Mode":
+					mechanicString.setCharAt(8, '1');
+					break;
+				case "Coins Collected":
+					mechanicString.setCharAt(9, '1');
+					break;
+				case "Bumping Brick Block":
+					mechanicString.setCharAt(10, '1');
+					break;
+				case "Bumping Question Block":
+					mechanicString.setCharAt(11, '1');
+					break;
+				}
+			}
+			if (mechanicString.toString().compareTo("000000000000") == 0) {
+				continue;
+			}
+			to_return.add(mechanicString.toString());
 		}	
-		return agentMechanics;
+		return to_return;
 	}
 	private ArrayList<String> mapPlaythroughMechanics(){
 		ArrayList<String> playMechanics = new ArrayList<String>();
@@ -269,27 +359,55 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		double fitnessScore = 0;
 
 		//reduce the lists to just actions
-		String[] agentMechanicsArrayExcess = EventLogger.getPlayedMechanics(run.getGameEvents());
+		String[] agentMechanicsArrayExcess = EventLogger.getPlayedMechanics(run.getGameEvents());		
 		ArrayList<String> agentActions = this.reduceMechanicsToActions(agentMechanicsArrayExcess);
-//		System.out.println("agent actions\n" + Arrays.toString(agentActions.toArray()));
-		ArrayList<String> playthroughActions = this.mapPlaythroughMechanics();
-//		System.out.println("playthough actions\n" + Arrays.toString(playthroughActions.toArray()));
+		ArrayList<String> playthroughActions = new ArrayList<String>(Arrays.asList(this._playthroughMechanics));
 		//go through agentActions and compareActions
-		int playthroughPointer = 0;
-		int agentPointer = 0;
-		while(playthroughPointer < playthroughActions.size() && agentPointer < agentActions.size()) {
-			if(playthroughActions.get(playthroughPointer).equalsIgnoreCase(agentActions.get(agentPointer))) {
-				playthroughPointer++;
+		int mechanicsMissed = 0;
+		int agentMechanicPointer = 0; 
+		int playthroughMechanicPointer = 0;
+		for(; playthroughMechanicPointer < playthroughActions.size(); playthroughMechanicPointer++) {
+			String mechanicToCheck = playthroughActions.get(playthroughMechanicPointer);
+			ArrayList<String> subArray = new ArrayList<String>(agentActions.subList(agentMechanicPointer, agentActions.size()));
+			int mechanicIndex = subArray.indexOf(mechanicToCheck);
+			if(mechanicIndex == -1) {
+				mechanicsMissed += 1;
 			}
-			agentPointer++;
+			else {
+				agentMechanicPointer += mechanicIndex + 1;
+			}
+			if(agentMechanicPointer >= agentActions.size()) {
+				playthroughMechanicPointer++;
+				break;
+			}
 		}
-
 		this._fitness = 100.0;
-		if(playthroughPointer  < playthroughActions.size()) {
-			double numberOfActionsLeft = playthroughActions.size() - playthroughPointer;
-			double penalty = numberOfActionsLeft * 2.5;
+		//lose points for the mechanics it missed
+		this._fitness -= (mechanicsMissed * 5);
+
+		//lose points for mechanics left
+		if(playthroughMechanicPointer  < playthroughActions.size()) {
+			double numberOfActionsLeft = playthroughActions.size() - playthroughMechanicPointer;
+			double penalty = numberOfActionsLeft * 1.25;
 			this._fitness -= penalty;
 		}
+		
+		
+//		int playthroughPointer = 0;
+//		int agentPointer = 0;
+//		while(playthroughPointer < playthroughActions.size() && agentPointer < agentActions.size()) {
+//			if(playthroughActions.get(playthroughPointer).equalsIgnoreCase(agentActions.get(agentPointer))) {
+//				playthroughPointer++;
+//			}
+//			agentPointer++;
+//		}
+//
+//		this._fitness = 100.0;
+//		if(playthroughPointer  < playthroughActions.size()) {
+//			double numberOfActionsLeft = playthroughActions.size() - playthroughPointer;
+//			double penalty = numberOfActionsLeft * 2.5;
+//			this._fitness -= penalty;
+//		}
 	}
 
 	//map elites -> 1 game, 1 agent

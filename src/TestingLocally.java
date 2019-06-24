@@ -1,12 +1,17 @@
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
 import engine.core.MarioGame;
+import fi2pop.FI2PopGeneticAlgorithm;
 import fi2pop.FI2PopGeneticAlgorithmL;
 import shared.Chromosome;
 import shared.ChromosomeL;
@@ -20,7 +25,7 @@ public class TestingLocally {
 		System.out.println(mechFolders.length);
 		for (File folder : mechFolders) {
 			//loop through each folder for the mechanics
-			String[] sceneMechanics = folder.getName().split(",");
+			String sceneMechanics = folder.getName().replace(",", "");
 			File[] files = folder.listFiles();
 			int i = 0;
 			for(File f : files) {
@@ -35,6 +40,17 @@ public class TestingLocally {
 		return lib;
 	}
 
+	private static void appendInfo(String path, int iteration, FI2PopGeneticAlgorithmL gen) throws FileNotFoundException {
+		double[] stats = gen.getStatistics();
+		PrintWriter pw = new PrintWriter(new FileOutputStream(new File(path + "result.txt"), true));
+		String result = "";
+		for(double v:stats) {
+			result += v + ", ";
+		}
+		result = result.substring(0, result.length() - 1);
+		pw.println("Batch number " + iteration + ": " + result);
+		pw.close();
+	}
 
 	public static void main(String[] args) {
 		//create Scene library
@@ -72,8 +88,8 @@ public class TestingLocally {
 		System.out.println("Initialize FI2Pop");
 		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, populationSize, chromosomeLength, appendingSize, crossover, mutation, elitism, playthroughMechanics, variableNumOfMechInScene);
 		System.out.println("Making Random Population of Chromosomes");
-//		gen.randomChromosomesInitialize();
-		gen.smartChomosomesInitialize();
+		gen.randomChromosomesInitialize();
+//		gen.smartChomosomesInitialize();
 		ChromosomeL[] chromosomes = gen.getPopulation();
 		int iteration = 0; 
 		int maxIterations = 3;
@@ -84,10 +100,18 @@ public class TestingLocally {
 			for(ChromosomeL c: chromosomes) {
 				System.out.println("\tRunning Chromosome number: " + ++index);
 				c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
-				System.out.println("\t\tFitness: " + c.getFitness());
+//				System.out.println("\t\tFitness: " + c.getFitness());
 			}
-
-			
+			try {
+				System.out.println("Writing results");
+				File f = new File("result/" + iteration + "/");
+				f.mkdir();
+				gen.writePopulation("result/" + iteration + "/");
+				appendInfo(("result/"), iteration, gen);				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
 			if(maxIterations > 0 && iteration >= maxIterations) {
 				break;
 			}
