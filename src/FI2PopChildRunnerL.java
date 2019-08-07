@@ -17,6 +17,7 @@ import java.util.TreeSet;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import engine.core.MarioAgent;
 import engine.core.MarioGame;
 import shared.ChromosomeL;
 import shared.ScenesLibrary;
@@ -25,6 +26,13 @@ import shared.evaluator.ChildEvaluator;
 public class FI2PopChildRunnerL {
 
 	private static void runExperiment(ChromosomeL c, HashMap<String, String> parameters) {
+		/*unit test*/
+//		MarioAgent[] agents = new MarioAgent[5];
+//		for(int i = 0; i < agents.length; i++) {
+//			agents[i] = new agents.robinBaumgarten.Agent();
+//		}
+//		c.calculateResults(new MarioGame(), agents, 20);
+		/*original*/
 		c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
 	}
 	
@@ -35,6 +43,7 @@ public class FI2PopChildRunnerL {
 			//loop through each folder for the mechanics
 			String sceneMechanics = folder.getName().replace(",", "");
 			File[] files = folder.listFiles();
+			Arrays.sort(files);
 			int i = 0;
 			for(File f : files) {
 				String[] lines = Files.readAllLines(f.toPath()).toArray(new String[0]);
@@ -159,6 +168,7 @@ public class FI2PopChildRunnerL {
 		// TODO Auto-generated method stub
 		int id = Integer.parseInt(args[0]);
 		int size = Integer.parseInt(args[1]);
+		int startIndex = id * size;
 		HashMap<String, String> parameters = null;
 		try {
 			parameters = readParameters("FI2PopParametersL.txt");
@@ -166,8 +176,9 @@ public class FI2PopChildRunnerL {
 			e1.printStackTrace();
 		}
 		ChildEvaluator child = new ChildEvaluator(id, size, parameters.get("inputFolder"), parameters.get("outputFolder"));
+		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
 		//create Scene library
-		ScenesLibrary lib = new ScenesLibrary();
+		ScenesLibrary lib = new ScenesLibrary(rnd);
 
 		try {
 			fillLibrary(lib, parameters.get("scenesFolder"));
@@ -175,7 +186,7 @@ public class FI2PopChildRunnerL {
 			e.printStackTrace();
 		}
 		
-		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
+		
 		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
 		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
 		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
@@ -183,15 +194,17 @@ public class FI2PopChildRunnerL {
 		String playthroughMechanicsLevelName = parameters.get("playthroughMechanicsLevelName"); 
 		String[] playthroughMechanics = fillPlaythroughMechanics(playthroughMechanicsFolder+playthroughMechanicsLevelName);
 		ChromosomeL[] chromosomes = null;
+		int iteration = 0;
+		int maxIterations = Integer.parseInt(parameters.get("maxIterations"));
 		while(true) {
 			try {
-				System.out.println("Waiting for parent");
+				System.out.println("Waiting for parent iteration " + iteration);
 				while(!child.checkChromosomes()) {
 					Thread.sleep(500);
 				}
 				Thread.sleep(1000);
 				System.out.println("Reading children values");
-				String[] levels = child.readChromosomes();
+				String[][] levels = child.readChromosomesL();
 				chromosomes = new ChromosomeL[levels.length];
 				for(int i=0; i<chromosomes.length; i++) {
 					chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics);
@@ -199,7 +212,8 @@ public class FI2PopChildRunnerL {
 				}
 				int index = 0;
 				for(ChromosomeL c:chromosomes) {
-					System.out.println("\tRunning Child number: " + ++index);
+					System.out.println("\tRunning Child number: " + (startIndex + index));
+					index++;
 					runExperiment(c, parameters);
 				}
 				child.clearInputFiles();
@@ -211,11 +225,16 @@ public class FI2PopChildRunnerL {
 					values[i] += chromosomes[i].toString() + "\n";
 				}
 				child.writeResults(values);
+				if(maxIterations > 0 && iteration >= maxIterations) {
+					System.out.println("Done! iteration: " + iteration + "; maxIterations: " + maxIterations);
+					break;
+				}
+				iteration += 1;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		
+//		lib.printLib();
 		
 	}
 

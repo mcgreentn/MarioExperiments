@@ -53,15 +53,15 @@ public class TestingLocally {
 	}
 
 	public static void main(String[] args) {
+		Random rnd = new Random(10);
 		//create Scene library
-		ScenesLibrary lib = new ScenesLibrary();
+		ScenesLibrary lib = new ScenesLibrary(rnd);
 		try {
 			fillLibrary(lib);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		//make the FI2Pop obj
-		Random rnd = new Random(10);
 		int populationSize = 10;
 		int chromosomeLength = 14;
 		int appendingSize = 2;

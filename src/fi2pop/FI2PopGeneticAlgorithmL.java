@@ -59,66 +59,6 @@ public class FI2PopGeneticAlgorithmL {
 		}
 	}
 	
-	public ArrayList<ArrayList<String>> poolOfLevels(){
-		int level = this._chromosomeLength;
-		
-		ArrayList<ArrayList<String>> possibleLevels = new ArrayList<ArrayList<String>>();
-	    for(int i = 0; i < this._playthroughMechanics.length; i++){
-	      if(possibleLevels.size() == 0){
-	        for(int j = 0; j < level; j++){
-	          ArrayList<String> t = new ArrayList<String>();
-	          for (int k = 0; k < level; k++){
-	            t.add("-");
-	          }
-	          if(this._lib.getSceneIndex(this._playthroughMechanics[i]) != -1) {
-		          t.set(j, this._playthroughMechanics[i]);
-		          possibleLevels.add(t);
-	          }
-	        }
-	      } else{
-	        ArrayList<ArrayList<String>> toAdd = new ArrayList<ArrayList<String>>();
-	        for(int j = 0; j < possibleLevels.size(); j++){
-	          ArrayList<String> temp = new ArrayList<String>(possibleLevels.get(j));
-	          int pos = 0; 
-	          for(int k = temp.size()-1; k > -1; k--){
-	            if(temp.get(k) != "-"){
-	              pos = k;
-	              break;
-	            }
-	          }
-	          for(; pos < level; pos++){
-	            ArrayList<String> tempToAdd = new ArrayList<String>(temp);
-	            if(tempToAdd.get(pos) == "-"){
-	            	if(this._lib.getSceneIndex(this._playthroughMechanics[i]) != -1) {
-	            		tempToAdd.set(pos, this._playthroughMechanics[i]);
-	            	}
-	            } else{
-	              String t = tempToAdd.get(pos);
-	              StringBuilder mechanicString = new StringBuilder(t);
-	              for(int z = 0; z < mechanicString.length(); z++){
-	                if(mechanicString.charAt(z) - '1' != 0){
-	                  mechanicString.setCharAt(z, this._playthroughMechanics[i].charAt(z));
-	                }
-	              }
-	              if(this._lib.getSceneIndex(mechanicString.toString()) != -1) {
-	            	  tempToAdd.set(pos, mechanicString.toString());
-	              }
-	            }
-	            toAdd.add(tempToAdd);
-	          }
-	          
-	        }
-	        possibleLevels = toAdd;
-	      }
-	    }
-	    for(int i = 0; i < possibleLevels.size(); i++){
-	        while(possibleLevels.get(i).indexOf("-") != -1){
-	        	possibleLevels.get(i).set(possibleLevels.get(i).indexOf("-"), "000000000000");
-	        }
-	    }
-	    return possibleLevels;
-	}
-	
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
@@ -149,7 +89,7 @@ public class FI2PopGeneticAlgorithmL {
 		ArrayList<ChromosomeL> feasible = new ArrayList<ChromosomeL>();
 		ArrayList<ChromosomeL> infeasible = new ArrayList<ChromosomeL>();
 		for(int i=0; i<this._population.length; i++) {
-			if(this._population[i].getConstraints() < 1) {
+			if(this._population[i].getConstraints() < this._population[i].getConstraintProbability()) {
 				infeasible.add(this._population[i]);
 			}
 			else {
@@ -173,8 +113,6 @@ public class FI2PopGeneticAlgorithmL {
 	
 	public void getNextGeneration() {
 		ChromosomeL[][] feasibleInfeasible = this.getFeasibleInfeasible(false);
-		System.out.println("size of feasible " + feasibleInfeasible[0].length);
-		System.out.println("size of infeasible " + feasibleInfeasible[1].length);
 		ChromosomeL[] newPopulation = new ChromosomeL[this._populationSize];
 		for (int i = 0; i < this._populationSize - this._elitism; i++) {
 			ChromosomeL[] usedPopulation = feasibleInfeasible[1];
@@ -190,7 +128,9 @@ public class FI2PopGeneticAlgorithmL {
 					child = (ChromosomeL)child.mutate();
 				}
 			} else {
-				child = (ChromosomeL)child.mutate();
+				if (this._rnd.nextDouble() < this._mutation) {
+					child = (ChromosomeL)child.mutate();
+				}
 			}
 			newPopulation[i] = child;
 		}
@@ -260,15 +200,20 @@ public class FI2PopGeneticAlgorithmL {
 		}
 
 		numInfeasible = infeasible.length;
-		for(ChromosomeL c:feasible) {
-			avgConstraints += c.getConstraints();
-		}
+//		for(ChromosomeL c:feasible) {
+//			avgConstraints += c.getConstraints();
+//		}
 		if(numInfeasible > 0) {
+			for(ChromosomeL c:infeasible) {
+				avgConstraints += c.getConstraints();
+			}
 			maxConstraints = infeasible[0].getConstraints();
 			minConstraints = infeasible[numInfeasible - 1].getConstraints();
 			avgConstraints /= numInfeasible;
 		}
+//		avgConstraints /= (numInfeasible+numFeasible);
 
+		
 		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints};
 	}
 }

@@ -36,6 +36,7 @@ public class FI2PopParentRunnerL {
 			//loop through each folder for the mechanics
 			String sceneMechanics = folder.getName().replace(",", "");
 			File[] files = folder.listFiles();
+			Arrays.sort(files);
 			int i = 0;
 			for(File f : files) {
 				String[] lines = Files.readAllLines(f.toPath()).toArray(new String[0]);
@@ -186,9 +187,9 @@ public class FI2PopParentRunnerL {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-
+		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
 		//create Scene library
-		ScenesLibrary lib = new ScenesLibrary();
+		ScenesLibrary lib = new ScenesLibrary(rnd);
 
 		try {
 			fillLibrary(lib, parameters.get("scenesFolder"));
@@ -197,7 +198,7 @@ public class FI2PopParentRunnerL {
 		}
 
 		//create FI2Pop 
-		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
+		
 		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
 		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
 		int popSize = Integer.parseInt(parameters.get("populationSize"));
@@ -232,10 +233,10 @@ public class FI2PopParentRunnerL {
 					levels[i] = chromosomes[i].getAge() + ",";
 					levels[i] += chromosomes[i].getGenes() + "\n" + chromosomes[i].toString() + "\n";
 				}
+				System.out.println("length of levels " + levels.length);
 				parent.writeChromosomes(levels);
 				System.out.println("Waiting for children to finish");
 				while(!parent.checkChromosomes(chromosomes.length)) {
-					System.out.println("SLEEPING");
 					Thread.sleep(500);
 				}
 				Thread.sleep(1000);
@@ -250,8 +251,9 @@ public class FI2PopParentRunnerL {
 				f.mkdir();
 				gen.writePopulation(parameters.get("resultFolder") + iteration + "/");
 				appendInfo(parameters.get("resultFolder"), iteration, gen);
-				deleteDirectory(new File(parameters.get("resultFolder") + (iteration - 1) + "/"));
-				if(maxIterations > 0 || iteration >= maxIterations) {
+				//deleteDirectory(new File(parameters.get("resultFolder") + (iteration - 1) + "/"));
+				if(maxIterations > 0 && iteration >= maxIterations) {
+					System.out.println("Done! iteration: " + iteration + "; maxIterations: " + maxIterations);
 					break;
 				}
 				System.out.println("Generate Next Population");
@@ -262,7 +264,7 @@ public class FI2PopParentRunnerL {
 				e.printStackTrace();
 			}	
 		}
-
+//		lib.printLib();
 
 
 		/* testing purposes*/
