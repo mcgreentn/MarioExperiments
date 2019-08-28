@@ -49,7 +49,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		for(int i = 0; i < this._playthroughMechanics.length; i++) {
 			this._numMechanicsInPlaythrough += this._playthroughMechanics[i].chars().filter(num -> num == '1').count();
 		}
-		
+
 		this._listOfPossibleMechanics = new String[] {"Mario Jumps", "Low Jump", "High Jump", "Short Jump", "Long Jump", "Stomp Kill", "Shell Kill", "Fall Kill", "Mario Mode", "Coins Collected", "Bumping Brick Block", "Bumping Question Block"};
 	}
 
@@ -64,7 +64,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			this._subGenes[i] = Integer.parseInt(subParts[i]);
 		}
 	}
-	
+
 	public ChromosomeL clone() {
 		ChromosomeL chromosome = new ChromosomeL(this._rnd, this._library, this._numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene);
 		for(int i=0; i < this._genes.length; i++) {
@@ -77,7 +77,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public double getConstraintProbability() {
 		return this._constraintProbability;
 	}
-	
+
 	public int getAge() {
 		return this._age;
 	}
@@ -124,14 +124,14 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		do {
 			sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
 			mechanicsToUseString = this._library.getSceneMechanics(sceneIndex);
-			
+
 			int[] tempIndex = this._library.getSceneIndex(mechanicsToUseString);
 			this._genes[index] = tempIndex[0];
 			this._subGenes[index] = tempIndex[1];
-			
+
 			num_mechanics = (int) mechanicsToUseString.chars().filter(num -> num == '1').count();
 		} while(num_mechanics != avg_mechanics);
-	    this._populationMechanics.add(mechanicsToUseString);
+		this._populationMechanics.add(mechanicsToUseString);
 	}
 	public void randomInitialization() {
 		int avg_mechanics = calcAvgMechanics();
@@ -155,7 +155,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		for(int i = 0; i < this._numOfScenes; i++) {
 			levelMechanics.add("000000000000");
 		}
-		
+
 		int sceneIndex = 0;
 		int playthroughMechanicIndex = 0;
 		while(sceneIndex < this._numOfScenes) {
@@ -169,8 +169,8 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			StringBuilder mechanicString = new StringBuilder(t);
 			for(int z = 0; z < mechanicString.length(); z++){
 				if(mechanicString.charAt(z) - '1' != 0){
-                  mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
-                }
+					mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
+				}
 			}
 			//check if it is in scenelibrary
 			if(this._library.getSceneIndex(mechanicString.toString())[0] != -1) {
@@ -191,8 +191,8 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			StringBuilder mechanicString = new StringBuilder(t);
 			for(int z = 0; z < mechanicString.length(); z++){
 				if(mechanicString.charAt(z) - '1' != 0){
-                  mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
-                }
+					mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
+				}
 			}
 			//check if it is in scenelibrary
 			if(this._library.getSceneIndex(mechanicString.toString())[0] != -1) {
@@ -222,9 +222,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	protected MarioResult[] runAlgorithms(MarioGame[] games, MarioAgent[] agents, int maxTime) {
 		MarioResult[] results = new MarioResult[agents.length];
 		for(int i=0; i<agents.length; i++) {
-//			System.out.println("\t Start playing game");
+			//			System.out.println("\t Start playing game");
 			results[i] = games[i].runGame(agents[i], this.toString(), maxTime);
-//			System.out.println("\t Finish playing game");
+			//			System.out.println("\t Finish playing game");
 		}
 		return results;
 	}
@@ -242,12 +242,12 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			tempConst /= runs.length;
 		}
-//		if(this._age > 0) {
-//			this._constraints = Math.min(this._constraints, tempConst);
-//		}
-//		else {
-			this._constraints = tempConst;
-//		}
+		//		if(this._age > 0) {
+		//			this._constraints = Math.min(this._constraints, tempConst);
+		//		}
+		//		else {
+		this._constraints = tempConst;
+		//		}
 	}
 
 	private void calculateDimensions(MarioResult run, int doNothingFallKills) {
@@ -268,9 +268,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 
 	private ArrayList<String> reduceMechanicsToActions(String[] mechanicsToReduceArrayExcess) {
 		ArrayList<String> mechanicsAL = new ArrayList<String>(Arrays.asList(mechanicsToReduceArrayExcess));
-		
+
 		ArrayList<String> to_return = new ArrayList<String>();
-		
+
 		for(int i = 0; i < mechanicsAL.size(); i++) {
 			StringBuilder mechanicString = new StringBuilder("000000000000");
 			ArrayList<String> agentMechanics = new ArrayList<String>();
@@ -287,9 +287,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			for(int j = 0; j < agentMechanics.size(); j++) {
 				String triggeredMech = agentMechanics.get(j);
 				switch(triggeredMech) {
-//				case "Mario Jumps":
-//					mechanicString.setCharAt(0, '1');
-//					break;
+				//				case "Mario Jumps":
+				//					mechanicString.setCharAt(0, '1');
+				//					break;
 				case "Low Jump":
 					mechanicString.setCharAt(0, '1');
 					mechanicString.setCharAt(1, '1');
@@ -425,33 +425,30 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public void calculateFitnessEntropy(MarioResult[] runs) {
 		double score = this.calculateFitness(runs[0]);
 		for(int i = 1; i < runs.length; i++) {
-			double temp = this.calculateFitness(runs[i]);
-			if (temp > score) {
-				score = temp;
-			}
+			score += this.calculateFitness(runs[i]);
 		}
-		this._fitness = score;
+		this._fitness = score / (double)runs.length;
 	}
-	
+
 	//since map elites uses 1 game with 1 agent, we only need the first result
 	public void calculateFitnessEntropy(MarioResult run) {
 		this._fitness = this.calculateFitness(run);
-		
-//		int playthroughPointer = 0;
-//		int agentPointer = 0;
-//		while(playthroughPointer < playthroughActions.size() && agentPointer < agentActions.size()) {
-//			if(playthroughActions.get(playthroughPointer).equalsIgnoreCase(agentActions.get(agentPointer))) {
-//				playthroughPointer++;
-//			}
-//			agentPointer++;
-//		}
-//
-//		this._fitness = 100.0;
-//		if(playthroughPointer  < playthroughActions.size()) {
-//			double numberOfActionsLeft = playthroughActions.size() - playthroughPointer;
-//			double penalty = numberOfActionsLeft * 2.5;
-//			this._fitness -= penalty;
-//		}
+
+		//		int playthroughPointer = 0;
+		//		int agentPointer = 0;
+		//		while(playthroughPointer < playthroughActions.size() && agentPointer < agentActions.size()) {
+		//			if(playthroughActions.get(playthroughPointer).equalsIgnoreCase(agentActions.get(agentPointer))) {
+		//				playthroughPointer++;
+		//			}
+		//			agentPointer++;
+		//		}
+		//
+		//		this._fitness = 100.0;
+		//		if(playthroughPointer  < playthroughActions.size()) {
+		//			double numberOfActionsLeft = playthroughActions.size() - playthroughPointer;
+		//			double penalty = numberOfActionsLeft * 2.5;
+		//			this._fitness -= penalty;
+		//		}
 	}
 
 	//map elites -> 1 game, 1 agent
@@ -482,15 +479,26 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		this.calculateConstraints(runs);
 		this._age += 1;
 		this.calculateDimensions(runs[0], fallKills);
+		if (runs.length > 1) {
+			this.calculateFitnessEntropy(runs);
+		}
+		else {
+			if(this._constraints >= this._constraintProbability) {
+				this.calculateFitnessEntropy(runs[0]);
+			}
+			else {
+				this._fitness = 0;
+			}
+		}
 		if(this._constraints >= this._constraintProbability) {
 			if(runs.length > 1) {
-//				MarioResult tosend = runs[0];
-//				for(int i = 1; i < runs.length; i++) {
-//					if (runs[i].getCompletionPercentage() > tosend.getCompletionPercentage()) {
-//						tosend = runs[i];
-//					}
-//				}
-//				this.calculateFitnessEntropy(tosend);
+				//				MarioResult tosend = runs[0];
+				//				for(int i = 1; i < runs.length; i++) {
+				//					if (runs[i].getCompletionPercentage() > tosend.getCompletionPercentage()) {
+				//						tosend = runs[i];
+				//					}
+				//				}
+				//				this.calculateFitnessEntropy(tosend);
 				this.calculateFitnessEntropy(runs);
 			} else {
 				this.calculateFitnessEntropy(runs[0]);
@@ -505,7 +513,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		ChromosomeL mutated = this.clone();
 		int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
 		String mechanicsToUseString = mutated._library.getSceneMechanics(sceneIndex);
-		
+
 		int[] tempIndex = mutated._library.getSceneIndex(mechanicsToUseString);
 		int indexToMutate = mutated._rnd.nextInt(mutated._genes.length);
 		mutated._genes[indexToMutate] = tempIndex[0];
@@ -535,18 +543,24 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		int height = this._library.getScene(this._genes[0], this._subGenes[0]).length;
 		for (int i = 0; i < height; i++) {
 			String appendingChar = "-";
-			if (i == height - 1 || i == height - 2) {
+			if (i == height - 2 || i == height - 3) {
 				appendingChar = "X";
 			}
 			//padding
 			//			for (int k = 0; k < this._appendingSize; k++) {
 			//				level += appendingChar;
 			//			}
-			//level
+			//level from the scenes
 			for (int j = 0; j < this._genes.length; j++) {
 				level += this._library.getScene(this._genes[j], this._subGenes[j])[i];
+				//padding between the scenes
+				if(i != height - 1) {
+					for (int k = 0; k < this._appendingSize; k++) {
+						level += appendingChar;
+					}
+				}
 			}
-			//			//padding
+			//padding
 			//			for (int k = 0; k < this._appendingSize; k++) {
 			//				level += appendingChar;
 			//			}

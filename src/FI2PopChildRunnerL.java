@@ -33,12 +33,26 @@ public class FI2PopChildRunnerL {
 //		}
 //		c.calculateResults(new MarioGame(), agents, 20);
 		/*original*/
-		c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
+		if(c.getAge() == 1 || c.getAge() == 0) {
+			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
+		}
+		else if (c.getAge() > 1) {
+			MarioAgent[] agents = new MarioAgent[c.getAge()];
+			for(int i = 0; i < agents.length; i++) {
+				agents[i] = new agents.robinBaumgarten.Agent();
+			}
+			c.calculateResults(new MarioGame(), agents, 20);
+		}
+		else {
+			System.out.println("ISSUE WITH THE AGE OF A CHROMOSOME: ITS AGE IS " + c.getAge());
+			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
+		}
 	}
 	
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);
 		File[] mechFolders = directory.listFiles();
+		Arrays.sort(mechFolders);
 		for (File folder : mechFolders) {
 			//loop through each folder for the mechanics
 			String sceneMechanics = folder.getName().replace(",", "");

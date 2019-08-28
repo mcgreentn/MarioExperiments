@@ -32,6 +32,7 @@ public class FI2PopParentRunnerL {
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);
 		File[] mechFolders = directory.listFiles();
+		Arrays.sort(mechFolders);
 		for (File folder : mechFolders) {
 			//loop through each folder for the mechanics
 			String sceneMechanics = folder.getName().replace(",", "");
@@ -196,9 +197,8 @@ public class FI2PopParentRunnerL {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-
-		//create FI2Pop 
 		
+		//create FI2Pop 		
 		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
 		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
 		int popSize = Integer.parseInt(parameters.get("populationSize"));
@@ -264,36 +264,7 @@ public class FI2PopParentRunnerL {
 				e.printStackTrace();
 			}	
 		}
-//		lib.printLib();
-
-
-		/* testing purposes*/
-		//		while(true) {
-		//			System.out.println("Generation " + iteration);
-		//			int index = 0; 
-		//			for(ChromosomeL c: chromosomes) {
-		//				System.out.println("\tRunning Chromosome number: " + ++index);
-		//				c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
-		//				System.out.println("\t\tFitness: " + c.getFitness());
-		//			}
-		//			try {
-		//				System.out.println("Writing results");
-		//				File f = new File("result/" + iteration + "/");
-		//				f.mkdir();
-		//				gen.writePopulation("result/" + iteration + "/");
-		//				appendInfo(("result/"), iteration, gen);				
-		//			} catch (Exception e) {
-		//				// TODO Auto-generated catch block
-		//				e.printStackTrace();
-		//			} 
-		//			if(maxIterations > 0 || iteration >= maxIterations) {
-		//				break;
-		//			}
-		//			System.out.println("\nGenerate Next Population");
-		//			gen.getNextGeneration();
-		//			chromosomes = gen.getPopulation();
-		//			iteration += 1;
-		//		}
+		
 		System.out.println("DONE");
 	}
 

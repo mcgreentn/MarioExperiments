@@ -1,0 +1,5 @@
+Chromosome 0: 1.0, 56.25
+Chromosome 1: 1.0, 53.75
+Chromosome 2: 1.0, 50.0
+Chromosome 3: 0.47369104623794556, 0.0
+Chromosome 4: 0.34401223063468933, 0.0

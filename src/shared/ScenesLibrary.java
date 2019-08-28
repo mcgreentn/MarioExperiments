@@ -24,6 +24,23 @@ class SingleScene{
 		this.scene = scene;
 	}
 	
+	public void makeSingleSceneHeight(String sceneMechanics, String fitness, String[] scene, int shift) {
+		this.sceneMechanics = sceneMechanics;
+		this.sceneFitness = fitness;
+		String[] temp = new String[scene.length]; 
+		for(int i = 0; i < scene.length - shift-1; i++) {
+			temp[i] = scene[i+shift];
+		}
+		for(int i = scene.length - shift-1; i < scene.length; i++) {
+			temp[i] = new String();
+			for(int j = 0; j < scene[i].length(); j++) {
+				temp[i] += "X";
+			}
+		}
+		
+		this.scene = temp;
+	}
+	
 	public String[] getScene() {
 		return this.scene;
 	}
@@ -41,20 +58,15 @@ public class ScenesLibrary {
 	private ArrayList<String> scenesMechanicsArrayList;
 	protected String[] arrayedScenesMechanics;
 	protected Map<String, ArrayList<SingleScene>> library;
-	protected int numberOfScenes;
-	
-	protected ArrayList<SingleScene> allScenes;
-	
+		
 	public ScenesLibrary(Random rnd) {
 		this.randObj = rnd;
 		
 		this.scenesMechanicsArrayList = new ArrayList<String>();
 		this.arrayedScenesMechanics = new String[0];
 		this.library = new HashMap<String, ArrayList<SingleScene>>();
-		this.numberOfScenes = 0;
-	
-		this.allScenes = new ArrayList<SingleScene>();
 	}
+	
 	public void printLib() {
 		System.out.println("~~~LIBRARY~~~~");
 		for(int i = 0; i < this.scenesMechanicsArrayList.size(); i++) {
@@ -68,22 +80,23 @@ public class ScenesLibrary {
 	public void addScene(String sceneMechanics, String fitness, String[] scene) {
 		SingleScene temp = new SingleScene(); 
 		temp.makeSingleScene(sceneMechanics, fitness, scene);
+		SingleScene tempHeight = new SingleScene();
+		tempHeight.makeSingleSceneHeight(sceneMechanics, fitness, scene, this.randObj.nextInt(3)+1);
 		if(this.library.containsKey(sceneMechanics)) {
 			this.library.get(sceneMechanics).add(temp);
+			this.library.get(sceneMechanics).add(tempHeight);
 		}else {
 			ArrayList<SingleScene> t = new ArrayList<SingleScene>();
 			t.add(temp);
+			t.add(tempHeight);
 			this.library.put(sceneMechanics, t);
 		}
 		
-		this.allScenes.add(temp);
 		this.scenesMechanicsArrayList.add(sceneMechanics);
 		this.arrayedScenesMechanics = this.scenesMechanicsArrayList.toArray(new String[0]);
-		this.numberOfScenes += 1;
 	}
 	
 	public int getNumberOfScenes() {
-//		return this.library.size();
 		return this.arrayedScenesMechanics.length;
 	}
 	public String[] getArrayedScenesMechanics() {
@@ -91,11 +104,8 @@ public class ScenesLibrary {
 	}
 	//get scene based off index
 	public String[] getScene(int index, int subIndex) {
-//		System.out.println("index " + index + "; sub " + subIndex);
 		String mechanicsTemp = this.getSceneMechanics(index);
 		ArrayList<SingleScene> sceneTempList = this.library.get(mechanicsTemp);
-//		System.out.println("mechanicsTemp " + mechanicsTemp);
-//		System.out.println("sceneTempList.length " + sceneTempList.size());
 		SingleScene singleSceneTemp = sceneTempList.get(subIndex);
 		return singleSceneTemp.getScene();
 	}

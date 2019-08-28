@@ -26,6 +26,7 @@ public class generatedAI {
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);
 		File[] mechFolders = directory.listFiles();
+		Arrays.sort(mechFolders);
 		for (File folder : mechFolders) {
 			//loop through each folder for the mechanics
 			String sceneMechanics = folder.getName().replace(",", "");
@@ -46,8 +47,8 @@ public class generatedAI {
 		String[][] result = new String[1][2];
 		int startIndex = 0;
 		for(int i=0; i<1; i++) {
-			result[i][0] = Files.readAllLines(Paths.get(fileLocation, fileName + ".txt")).get(0);
-			result[i][1] = Files.readAllLines(Paths.get(fileLocation, fileName + ".txt")).get(1);
+			result[i][0] = Files.readAllLines(Paths.get(fileLocation, fileName + "e.txt")).get(0);
+			result[i][1] = Files.readAllLines(Paths.get(fileLocation, fileName + "e.txt")).get(1);
 		}
 		return result;
 	}
@@ -171,14 +172,12 @@ public class generatedAI {
 			String level = readLevel();
 			MarioGame game2 = new MarioGame();
 			game2.runGame(new agents.robinBaumgarten.Agent(), level, 20, 0, true);
-//			game2.playGame(level, 20);
+//			game2.playGame(level, 60);
 
 			
 //			String[][] levels = readChromosome();
 //			ChromosomeL[] chromosomes = new ChromosomeL[levels.length];
 //			for(int i=0; i<chromosomes.length; i++) {
-//				System.out.println(levels[i][0] + " ");
-//				System.out.println(levels[i][1] + " ");
 //				chromosomes[i] = new ChromosomeL(rnd, lib, 14, 2, playthroughMechanics, true);
 //				levels[i][0] = "0," + levels[i][0];
 //				chromosomes[i].stringInitialize(levels[i]);
