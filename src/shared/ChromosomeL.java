@@ -490,23 +490,23 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				this._fitness = 0;
 			}
 		}
-		if(this._constraints >= this._constraintProbability) {
-			if(runs.length > 1) {
-				//				MarioResult tosend = runs[0];
-				//				for(int i = 1; i < runs.length; i++) {
-				//					if (runs[i].getCompletionPercentage() > tosend.getCompletionPercentage()) {
-				//						tosend = runs[i];
-				//					}
-				//				}
-				//				this.calculateFitnessEntropy(tosend);
-				this.calculateFitnessEntropy(runs);
-			} else {
-				this.calculateFitnessEntropy(runs[0]);
-			}
-		}
-		else {
-			this._fitness = 0;
-		}
+//		if(this._constraints >= this._constraintProbability) {
+//			if(runs.length > 1) {
+//				//				MarioResult tosend = runs[0];
+//				//				for(int i = 1; i < runs.length; i++) {
+//				//					if (runs[i].getCompletionPercentage() > tosend.getCompletionPercentage()) {
+//				//						tosend = runs[i];
+//				//					}
+//				//				}
+//				//				this.calculateFitnessEntropy(tosend);
+//				this.calculateFitnessEntropy(runs);
+//			} else {
+//				this.calculateFitnessEntropy(runs[0]);
+//			}
+//		}
+//		else {
+//			this._fitness = 0;
+//		}
 	}
 
 	public ChromosomeL mutate() {

@@ -89,7 +89,8 @@ public class FI2PopGeneticAlgorithmL {
 		ArrayList<ChromosomeL> feasible = new ArrayList<ChromosomeL>();
 		ArrayList<ChromosomeL> infeasible = new ArrayList<ChromosomeL>();
 		for(int i=0; i<this._population.length; i++) {
-			if(this._population[i].getConstraints() < this._population[i].getConstraintProbability()) {
+			if((this._population[i].getAge() == 0 || this._population[i].getAge() == 1) &&
+					(this._population[i].getConstraints() < this._population[i].getConstraintProbability())) {
 				infeasible.add(this._population[i]);
 			}
 			else {
@@ -128,9 +129,7 @@ public class FI2PopGeneticAlgorithmL {
 					child = (ChromosomeL)child.mutate();
 				}
 			} else {
-				if (this._rnd.nextDouble() < this._mutation) {
 					child = (ChromosomeL)child.mutate();
-				}
 			}
 			newPopulation[i] = child;
 		}
