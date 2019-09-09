@@ -46,11 +46,11 @@ public class FI2PopGeneticAlgorithmL {
 		this._playthroughMechanics = playThroughMechanics;
 		this._variableNumOfMechInScene = variableNumOfMechInScene;
 	}
-	
+
 	public ChromosomeL[] getPopulation() {
 		return this._population;
 	}
-	
+
 	public void randomChromosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
@@ -58,7 +58,7 @@ public class FI2PopGeneticAlgorithmL {
 			this._population[i].randomInitialization();
 		}
 	}
-	
+
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
@@ -66,7 +66,7 @@ public class FI2PopGeneticAlgorithmL {
 			this._population[i].smartInitialization();
 		}
 	}
-	
+
 	private ChromosomeL rankSelection(ChromosomeL[] pop) {
 		double[] ranks = new double[pop.length];
 		ranks[0] = 1;
@@ -84,13 +84,12 @@ public class FI2PopGeneticAlgorithmL {
 		}
 		return pop[pop.length - 1];
 	}
-	
+
 	private ChromosomeL[][] getFeasibleInfeasible(boolean descending){
 		ArrayList<ChromosomeL> feasible = new ArrayList<ChromosomeL>();
 		ArrayList<ChromosomeL> infeasible = new ArrayList<ChromosomeL>();
 		for(int i=0; i<this._population.length; i++) {
-			if((this._population[i].getAge() == 0 || this._population[i].getAge() == 1) &&
-					(this._population[i].getConstraints() < this._population[i].getConstraintProbability())) {
+			if(this._population[i].getConstraints() < this._population[i].getConstraintProbability()) {
 				infeasible.add(this._population[i]);
 			}
 			else {
@@ -111,10 +110,26 @@ public class FI2PopGeneticAlgorithmL {
 		}
 		return new ChromosomeL[][] {feasible.toArray(new ChromosomeL[0]), infeasible.toArray(new ChromosomeL[0]) };
 	}
-	
+
 	public void getNextGeneration() {
 		ChromosomeL[][] feasibleInfeasible = this.getFeasibleInfeasible(false);
 		ChromosomeL[] newPopulation = new ChromosomeL[this._populationSize];
+
+//		System.out.println("~~~~~~~~~~~~\nPOPULATION FEASIBLE");
+//		for(int i=0; i<feasibleInfeasible[0].length; i++) {
+//			System.out.println("\tChild: "+ feasibleInfeasible[0][i].getAge() +
+//					"; Fitness: " + feasibleInfeasible[0][i].getFitness() + 
+//					"; Constraint: " + feasibleInfeasible[0][i].getConstraints() +
+//					"\n"+ feasibleInfeasible[0][i].getGenes());
+//		}
+//		System.out.println("~~~~~~~~~~~~\nPOPULATION INFEASIBLE");
+//		for(int i=0; i<feasibleInfeasible[1].length; i++) {
+//			System.out.println("\tChild: "+ feasibleInfeasible[1][i].getAge() +
+//					"; Fitness: " + feasibleInfeasible[1][i].getFitness() + 
+//					"; Constraint: " + feasibleInfeasible[1][i].getConstraints() +
+//					"\n"+ feasibleInfeasible[1][i].getGenes());
+//		}
+
 		for (int i = 0; i < this._populationSize - this._elitism; i++) {
 			ChromosomeL[] usedPopulation = feasibleInfeasible[1];
 			if (this._rnd.nextDouble() < (double) (feasibleInfeasible[0].length) / this._populationSize) {
@@ -124,12 +139,64 @@ public class FI2PopGeneticAlgorithmL {
 			ChromosomeL child = (ChromosomeL)parent1.clone();
 			if (this._rnd.nextDouble() < this._crossover) {
 				ChromosomeL parent2 = this.rankSelection(usedPopulation);
-				child = (ChromosomeL)parent1.crossover(parent2);				
-				if (this._rnd.nextDouble() < this._mutation) {
+				if((parent1.getGenes()).compareTo(parent2.getGenes()) == 0) {
 					child = (ChromosomeL)child.mutate();
+					
+//					System.out.println("~~~~~~~~~~~~~~~~~~~");
+//					System.out.println("CROSSOVER FAIL; AFTER MUTATION");
+//					System.out.println("\tParent1: "+ parent1.getAge()+
+//							"; Fitness: " + parent1.getFitness() + 
+//							"; Constraint: " + parent1.getConstraints() + 
+//							"\n"+ parent1.getGenes());
+//					System.out.println("\tChild: "+ child.getAge() +
+//							"; Fitness: " + child.getFitness() + 
+//							"; Constraint: " + child.getConstraints() +
+//							"\n"+ child.getGenes());
+				}
+				else {
+					child = (ChromosomeL)parent1.crossover(parent2);
+					if((child.getGenes()).compareTo(parent2.getGenes()) == 0 ||
+							(child.getGenes()).compareTo(parent2.getGenes()) == 0
+							) {
+						child = (ChromosomeL)child.mutate();
+					}
+//					System.out.println("~~~~~~~~~~~~~~~~~~~");
+//					System.out.println("AFTER CROSSOVER: ");
+//					System.out.println("\tParent1: "+ parent1.getAge()+
+//							"; Fitness: " + parent1.getFitness() + 
+//							"; Constraint: " + parent1.getConstraints() + 
+//							"\n"+ parent1.getGenes());
+//					System.out.println("\tParent2: "+ parent2.getAge() +
+//							"; Fitness: " + parent2.getFitness() + 
+//							"; Constraint: " + parent2.getConstraints() + 
+//							"\n"+ parent2.getGenes());
+//					System.out.println("\tChild: "+ child.getAge() +
+//							"; Fitness: " + child.getFitness() + 
+//							"; Constraint: " + child.getConstraints() +
+//							"\n"+ child.getGenes());
+					if (this._rnd.nextDouble() < this._mutation) {
+						
+						child = (ChromosomeL)child.mutate();
+//						System.out.println("AFTER MUTATION");
+//						System.out.println("\tChild: "+ child.getAge() +
+//								"; Fitness: " + child.getFitness() + 
+//								"; Constraint: " + child.getConstraints() +
+//								"\n"+ child.getGenes());
+					}
 				}
 			} else {
-					child = (ChromosomeL)child.mutate();
+				child = (ChromosomeL)child.mutate();
+				
+//				System.out.println("~~~~~~~~~~~~~~~~~~~");
+//				System.out.println("AFTER MUTATION");
+//				System.out.println("\tParent1: "+ parent1.getAge()+
+//						"; Fitness: " + parent1.getFitness() + 
+//						"; Constraint: " + parent1.getConstraints() + 
+//						"\n"+ parent1.getGenes());
+//				System.out.println("\tChild: "+ child.getAge() +
+//						"; Fitness: " + child.getFitness() + 
+//						"; Constraint: " + child.getConstraints() +
+//						"\n"+ child.getGenes());
 			}
 			newPopulation[i] = child;
 		}
@@ -139,10 +206,12 @@ public class FI2PopGeneticAlgorithmL {
 			} else {
 				newPopulation[newPopulation.length - 1 - i] = feasibleInfeasible[1][feasibleInfeasible[1].length - 1 - (i - feasibleInfeasible[0].length)];
 			}
+//			System.out.println("Elite " + i + ": " + newPopulation[newPopulation.length - 1 - i].getAge() + "\n" + newPopulation[newPopulation.length - 1 - i].getGenes());
 		}
+//		System.out.println("~~~~~~~~~~~~~~~~~~~");
 		this._population = newPopulation;
 	}
-	
+
 	public void writePopulation(String path) throws FileNotFoundException, UnsupportedEncodingException {
 		ChromosomeL[][] pop = this.getFeasibleInfeasible(true);
 		ChromosomeL[] feasible = pop[0];
@@ -173,7 +242,7 @@ public class FI2PopGeneticAlgorithmL {
 		}
 		resultWriter.close();
 	}
-	
+
 	public double[] getStatistics() {
 		int numFeasible = 0;
 		int numInfeasible = 0;
@@ -199,9 +268,9 @@ public class FI2PopGeneticAlgorithmL {
 		}
 
 		numInfeasible = infeasible.length;
-//		for(ChromosomeL c:feasible) {
-//			avgConstraints += c.getConstraints();
-//		}
+		//		for(ChromosomeL c:feasible) {
+		//			avgConstraints += c.getConstraints();
+		//		}
 		if(numInfeasible > 0) {
 			for(ChromosomeL c:infeasible) {
 				avgConstraints += c.getConstraints();
@@ -210,9 +279,9 @@ public class FI2PopGeneticAlgorithmL {
 			minConstraints = infeasible[numInfeasible - 1].getConstraints();
 			avgConstraints /= numInfeasible;
 		}
-//		avgConstraints /= (numInfeasible+numFeasible);
+		//		avgConstraints /= (numInfeasible+numFeasible);
 
-		
+
 		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints};
 	}
 }

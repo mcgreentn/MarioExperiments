@@ -1,13 +1,13 @@
 seed = 1023124
-populationSize = 1
+populationSize = 5
 chromosomeLength = 14
 appendingSize = 2
 crossover = 0.7
 mutation = 0.2
-elitism = 5
+elitism = 1
 variableNumberOfMechanics = true
-initialization = smart
-maxIterations = 3
+initialization = random
+maxIterations = 2
 scenesFolder = scenelibrary/
 playthroughMechanicsFolder = playthroughs/
 playthroughMechanicsLevelName = ai-lvl-8.json

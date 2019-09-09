@@ -21,7 +21,7 @@ import shared.ChromosomeL;
 import shared.ScenesLibrary;
 
 public class generatedAI {
-	private static String  fileLocation = "runAIVid/normal_test/lvl1/";
+	private static String  fileLocation = "runAIVid/";
 	private static String fileName = "0";
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);

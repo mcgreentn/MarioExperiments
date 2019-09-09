@@ -97,6 +97,7 @@ public class ScenesLibrary {
 	}
 	
 	public int getNumberOfScenes() {
+//		this.scenesMechanicsArrayList.size() is the same as this.arrayedScenesMechanics.length
 		return this.arrayedScenesMechanics.length;
 	}
 	public String[] getArrayedScenesMechanics() {
@@ -120,6 +121,17 @@ public class ScenesLibrary {
 			toReturn[1] = this.randObj.nextInt(sceneTempList.size());
 		}
 		return toReturn;
+	}
+	//get the subGene
+	//we have a valid scene index from this.scenesMechanicsArraylist
+	//get the corresponding subgenes
+	public int getSubSceneIndex(int geneIndex) {
+		String mechanicsToUseString = this.getSceneMechanics(geneIndex);
+		ArrayList<SingleScene> sceneTempList = this.library.get(mechanicsToUseString);
+		if(sceneTempList == null || sceneTempList.size() == 0) {
+			return -1;
+		} 
+		return this.randObj.nextInt(sceneTempList.size());
 	}
 	public String getSceneMechanics(int index) {
 		return this.scenesMechanicsArrayList.get(index);

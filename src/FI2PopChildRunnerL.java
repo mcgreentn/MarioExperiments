@@ -27,11 +27,11 @@ public class FI2PopChildRunnerL {
 
 	private static void runExperiment(ChromosomeL c, HashMap<String, String> parameters) {
 		/*unit test*/
-//		MarioAgent[] agents = new MarioAgent[5];
-//		for(int i = 0; i < agents.length; i++) {
-//			agents[i] = new agents.robinBaumgarten.Agent();
-//		}
-//		c.calculateResults(new MarioGame(), agents, 20);
+		//		MarioAgent[] agents = new MarioAgent[5];
+		//		for(int i = 0; i < agents.length; i++) {
+		//			agents[i] = new agents.robinBaumgarten.Agent();
+		//		}
+		//		c.calculateResults(new MarioGame(), agents, 20);
 		/*original*/
 		if(c.getAge() == 1 || c.getAge() == 0) {
 			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
@@ -48,7 +48,7 @@ public class FI2PopChildRunnerL {
 			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
 		}
 	}
-	
+
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);
 		File[] mechFolders = directory.listFiles();
@@ -69,7 +69,7 @@ public class FI2PopChildRunnerL {
 		}
 		return lib;
 	}
-	
+
 	private static HashMap<String, String> readParameters(String filename) throws IOException {
 		List<String> lines = Files.readAllLines(Paths.get("", filename));
 		HashMap<String, String> parameters = new HashMap<String, String>();
@@ -82,7 +82,7 @@ public class FI2PopChildRunnerL {
 		}
 		return parameters;
 	}
-	
+
 	private static String[] fillPlaythroughMechanics(String playthroughMechanicsFile) {
 		String[] toReturnStringArray = new String[0];
 		ArrayList<String> to_return = new ArrayList<String>();
@@ -177,8 +177,17 @@ public class FI2PopChildRunnerL {
 		toReturnStringArray = to_return.toArray(new String[0]);
 		return toReturnStringArray;
 	}
+	
+    private static final long MEGABYTE = 1024L * 1024L;
+
+    public static long bytesToMegabytes(long bytes) {
+        return bytes / MEGABYTE;
+    }
 
 	public static void main(String[] args) {
+		 // Get the Java runtime
+        Runtime runtime = Runtime.getRuntime();
+       
 		// TODO Auto-generated method stub
 		int id = Integer.parseInt(args[0]);
 		int size = Integer.parseInt(args[1]);
@@ -199,8 +208,8 @@ public class FI2PopChildRunnerL {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		
+
+
 		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
 		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
 		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
@@ -208,6 +217,20 @@ public class FI2PopChildRunnerL {
 		String playthroughMechanicsLevelName = parameters.get("playthroughMechanicsLevelName"); 
 		String[] playthroughMechanics = fillPlaythroughMechanics(playthroughMechanicsFolder+playthroughMechanicsLevelName);
 		ChromosomeL[] chromosomes = null;
+		String[][] levels = null;
+		try {
+			while(!child.checkChromosomes()) {
+				Thread.sleep(500);
+			}
+			levels = child.readChromosomesL();
+			chromosomes = new ChromosomeL[levels.length];
+			for(int i=0; i<chromosomes.length; i++) {
+				chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics);
+				chromosomes[i].stringInitialize(levels[i]);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 		int iteration = 0;
 		int maxIterations = Integer.parseInt(parameters.get("maxIterations"));
 		while(true) {
@@ -218,10 +241,9 @@ public class FI2PopChildRunnerL {
 				}
 				Thread.sleep(1000);
 				System.out.println("Reading children values");
-				String[][] levels = child.readChromosomesL();
-				chromosomes = new ChromosomeL[levels.length];
+				levels = child.readChromosomesL();
 				for(int i=0; i<chromosomes.length; i++) {
-					chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics);
+					chromosomes[i].chromosomeLReset();// = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics);
 					chromosomes[i].stringInitialize(levels[i]);
 				}
 				int index = 0;
@@ -244,12 +266,27 @@ public class FI2PopChildRunnerL {
 					break;
 				}
 				iteration += 1;
+				
+				 // Run the garbage collector
+		        runtime.gc();
+		        // Calculate the used memory
+		        long memory = runtime.totalMemory() - runtime.freeMemory();
+		        System.out.println("Used memory is bytes: " + memory);
+		        System.out.println("Used memory is megabytes: "
+		                + bytesToMegabytes(memory));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-//		lib.printLib();
-		
+		 // Run the garbage collector
+        runtime.gc();
+        // Calculate the used memory
+        long memory = runtime.totalMemory() - runtime.freeMemory();
+        System.out.println("Used memory is bytes: " + memory);
+        System.out.println("Used memory is megabytes: "
+                + bytesToMegabytes(memory));
+		//		lib.printLib();
+
 	}
 
 }

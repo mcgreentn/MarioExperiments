@@ -264,7 +264,12 @@ public class FI2PopParentRunnerL {
 				e.printStackTrace();
 			}	
 		}
-		
+//		for(int i=0; i<chromosomes.length; i++) {
+//			System.out.println("\tChild: "+ chromosomes[i].getAge() +
+//					"; Fitness: " + chromosomes[i].getFitness() + 
+//					"; Constraint: " + chromosomes[i].getConstraints() +
+//					"\n"+ chromosomes[i].getGenes());
+//		}
 		System.out.println("DONE");
 	}
 
