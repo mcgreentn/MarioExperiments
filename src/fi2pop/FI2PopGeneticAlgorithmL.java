@@ -138,7 +138,8 @@ public class FI2PopGeneticAlgorithmL {
 			ChromosomeL parent1 = this.rankSelection(usedPopulation);
 			ChromosomeL child = (ChromosomeL)parent1.clone();
 			if (this._rnd.nextDouble() < this._crossover) {
-				ChromosomeL parent2 = this.rankSelection(usedPopulation);
+//				ChromosomeL parent2 = this.rankSelection(usedPopulation);
+				ChromosomeL parent2 = this._population[this._rnd.nextInt(this._populationSize)];
 				if((parent1.getGenes()).compareTo(parent2.getGenes()) == 0) {
 					child = (ChromosomeL)child.mutate();
 					
