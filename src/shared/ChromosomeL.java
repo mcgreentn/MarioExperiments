@@ -177,6 +177,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			String t = levelMechanics.get(sceneIndex);
 			StringBuilder mechanicString = new StringBuilder(t);
+			if (playthroughMechanicIndex >= this._playthroughMechanics.length) {
+				break;
+			}
 			for(int z = 0; z < mechanicString.length(); z++){
 				if(mechanicString.charAt(z) - '1' != 0){
 					mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
