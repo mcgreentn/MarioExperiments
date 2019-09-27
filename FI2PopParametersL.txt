@@ -1,5 +1,5 @@
 seed = 1023124
-populationSize = 24
+populationSize = 100
 chromosomeLength = 14
 appendingSize = 2
 crossover = 0.7

@@ -2,7 +2,9 @@ package shared;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import engine.core.EventLogger;
 import engine.core.MarioAgent;
@@ -156,6 +158,27 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			avg_mechanics = 3;
 		}
 		this.createGeneRandomly(i, avg_mechanics);
+	}
+	
+	public void mutatedSmartInitialization() {
+		System.out.println("~~~~~~~~~~~~\nPOP Original");
+		System.out.println(this.getGenes());
+		Set<Integer> mutatedSceneIndex = new HashSet<Integer> ();
+		int num_scenes_mutate = (int)(0.3 * this._numOfScenes);
+		for(int i = 0; i < num_scenes_mutate; i++) {
+			int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
+			int indexToMutate = this._rnd.nextInt(this._genes.length);
+			while(mutatedSceneIndex.contains(indexToMutate)) {
+				indexToMutate = this._rnd.nextInt(this._genes.length);
+			}
+			mutatedSceneIndex.add(indexToMutate);
+			this._genes[indexToMutate] = sceneIndex;
+			this._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+		}
+		System.out.println("\t"+num_scenes_mutate+"\n\t"+mutatedSceneIndex);
+		System.out.println("~~~~~~~~~~~~\nPOP MUTATED");
+		System.out.println(this.getGenes());
+		System.out.println(); 
 	}
 
 	public void smartInitialization() {
