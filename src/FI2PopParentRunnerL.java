@@ -211,7 +211,7 @@ public class FI2PopParentRunnerL {
 		
 		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
 		System.out.println("Initialize FI2Pop");
-		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, popSize, chromosomeLength, appendingSize, crossover, mutation, elitism, playthroughMechanics, variableNumberOfMechanics);
+		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, playthroughMechanics, parameters);
 		ParentEvaluator parent = new ParentEvaluator(parameters.get("inputFolder"), parameters.get("outputFolder"));
 		String typeOfInitialization = parameters.get("initialization");
 		System.out.println("First Batch of Chromosomes " + typeOfInitialization);

@@ -225,7 +225,7 @@ public class FI2PopChildRunnerL {
 			levels = child.readChromosomesL();
 			chromosomes = new ChromosomeL[levels.length];
 			for(int i=0; i<chromosomes.length; i++) {
-				chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics);
+				chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics, parameters);
 				chromosomes[i].stringInitialize(levels[i]);
 			}
 		}catch (Exception e) {

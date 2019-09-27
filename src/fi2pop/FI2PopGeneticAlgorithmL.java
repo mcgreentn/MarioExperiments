@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Random;
 
 import shared.Chromosome;
@@ -31,20 +32,21 @@ public class FI2PopGeneticAlgorithmL {
 	private ScenesLibrary _lib;
 	private String[] _playthroughMechanics;
 	private boolean _variableNumOfMechInScene;
+	private HashMap<String, String> _parameters;
 
-	public FI2PopGeneticAlgorithmL(ScenesLibrary lib, Random rnd, int populationSize, int chromosomeLength, int appendingSize, double crossover,
-			double mutation, int elitism, String[] playThroughMechanics, boolean variableNumOfMechInScene) {
+	public FI2PopGeneticAlgorithmL(ScenesLibrary lib, Random rnd, String[] playThroughMechanics, HashMap<String, String> parameters) {
+		this._parameters = parameters;
 		this._lib = lib;
-		this._populationSize = populationSize;
-		this._chromosomeLength = chromosomeLength;
-		this._appendingSize = appendingSize;
-		this._crossover = crossover;
-		this._mutation = mutation;
-		this._elitism = elitism;
+		this._populationSize = Integer.parseInt(this._parameters.get("populationSize"));
+		this._chromosomeLength = Integer.parseInt(this._parameters.get("chromosomeLength"));
+		this._appendingSize = Integer.parseInt(this._parameters.get("appendingSize"));
+		this._crossover = Double.parseDouble(this._parameters.get("crossover"));
+		this._mutation = Double.parseDouble(this._parameters.get("mutation"));
+		this._elitism = Integer.parseInt(this._parameters.get("elitism"));
 		this._rnd = rnd;
 		this._population = new ChromosomeL[0];
 		this._playthroughMechanics = playThroughMechanics;
-		this._variableNumOfMechInScene = variableNumOfMechInScene;
+		this._variableNumOfMechInScene = Boolean.parseBoolean(this._parameters.get("variableNumberOfMechanics"));
 	}
 
 	public ChromosomeL[] getPopulation() {
@@ -54,7 +56,7 @@ public class FI2PopGeneticAlgorithmL {
 	public void randomChromosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
-			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene);
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 			this._population[i].randomInitialization();
 		}
 	}
@@ -62,7 +64,7 @@ public class FI2PopGeneticAlgorithmL {
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
-			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene);
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 			this._population[i].smartInitialization();
 		}
 	}

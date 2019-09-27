@@ -2,7 +2,9 @@ package shared;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Random;
+
 
 import engine.core.EventLogger;
 import engine.core.MarioAgent;
@@ -27,10 +29,16 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	private boolean _variableNumOfMechInScene;
 	private String[] _listOfPossibleMechanics;
 	private String[] _playthroughMechanics;
+	private HashMap<String, String> _parameters;
+	
+	
+	private boolean punishNeverMechs = false;
+	private double percentagePenaltyExtraMechs = 0.2;
+
 
 	//chromosome is a full level
 	//a gene is a single scene
-	public ChromosomeL(Random rnd, ScenesLibrary lib, int numOfScenes, int appendingSize, String[] playthroughMechanics, boolean variableNumOfMechInScene) {
+	public ChromosomeL(Random rnd, ScenesLibrary lib, int numOfScenes, int appendingSize, String[] playthroughMechanics, boolean variableNumOfMechInScene, HashMap<String, String> parameters) {
 		this._rnd = rnd;
 		this._library = lib;
 		this._genes = new int[numOfScenes];
@@ -46,6 +54,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		this._variableNumOfMechInScene = variableNumOfMechInScene;
 		this._playthroughMechanics = playthroughMechanics;
 		this._numMechanicsInPlaythrough = 0;
+		this._parameters = parameters;
 		for(int i = 0; i < this._playthroughMechanics.length; i++) {
 			this._numMechanicsInPlaythrough += this._playthroughMechanics[i].chars().filter(num -> num == '1').count();
 		}
@@ -77,7 +86,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	}
 
 	public ChromosomeL clone() {
-		ChromosomeL chromosome = new ChromosomeL(this._rnd, this._library, this._numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene);
+		ChromosomeL chromosome = new ChromosomeL(this._rnd, this._library, this._numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 		for(int i=0; i < this._genes.length; i++) {
 			chromosome._genes[i] = this._genes[i];
 			chromosome._subGenes[i] = this._subGenes[i];
@@ -408,6 +417,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		int mechanicsMissed = 0;
 		int agentMechanicPointer = 0; 
 		int playthroughMechanicPointer = 0;
+		int extraMechs = 0;
 		for(; playthroughMechanicPointer < playthroughActions.size(); playthroughMechanicPointer++) {
 			String mechanicToCheck = playthroughActions.get(playthroughMechanicPointer);
 			ArrayList<String> subArray = new ArrayList<String>(agentActions.subList(agentMechanicPointer, agentActions.size()));
@@ -417,6 +427,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			else {
 				agentMechanicPointer += mechanicIndex + 1;
+				extraMechs += mechanicIndex;
 			}
 			if(agentMechanicPointer >= agentActions.size()) {
 				playthroughMechanicPointer++;
@@ -433,6 +444,24 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			double penalty = numberOfActionsLeft * 1.25;
 			fitnessScore -= penalty;
 		}
+		System.out.println(Boolean.parseBoolean(this._parameters.get("punishExtraMechs")));
+		if(Boolean.parseBoolean(this._parameters.get("punishExtraMechs"))) {
+			double a = Double.parseDouble(this._parameters.get("a"));
+			double b = Double.parseDouble(this._parameters.get("b"));
+			double c = Double.parseDouble(this._parameters.get("c"));
+			double percentageP = Double.parseDouble(this._parameters.get("percentagePenaltyExtraMechs"));
+			
+			double equation = a * Math.tanh(b * extraMechs) + c;
+			double penalty = percentageP * equation * Math.abs(fitnessScore);
+			System.out.println("Extra Count: " + extraMechs + " || Penalty: " + penalty + " || " + fitnessScore + " -> " + (fitnessScore-penalty));
+			fitnessScore -= penalty;
+			
+		}
+
+		if(Boolean.parseBoolean(this._parameters.get("punishNeverMechs"))) {
+			
+		}
+		
 		return fitnessScore;
 	}
 	public void calculateFitnessEntropy(MarioResult[] runs) {
