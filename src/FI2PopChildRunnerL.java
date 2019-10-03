@@ -33,8 +33,15 @@ public class FI2PopChildRunnerL {
 		//		}
 		//		c.calculateResults(new MarioGame(), agents, 20);
 		/*original*/
+
 		if(c.getAge() == 1 || c.getAge() == 0) {
-			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
+			int playthroughCount = Integer.parseInt(parameters.get("playthroughCount"));
+			MarioAgent[] marioAgents = new MarioAgent[playthroughCount];
+			for(int i = 0; i < playthroughCount; i++) {
+				marioAgents[i] = new agents.robinBaumgarten.Agent();
+			}
+			
+			c.calculateResults(new MarioGame(), marioAgents, 20);
 		}
 		else if (c.getAge() > 1) {
 			MarioAgent[] agents = new MarioAgent[c.getAge()];

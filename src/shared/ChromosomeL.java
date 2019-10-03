@@ -252,23 +252,38 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	}
 
 	private void calculateConstraints(MarioResult[] runs) {
-		double tempConst = runs[0].getCompletionPercentage();
-		if(runs.length > 1) {
+		double avgConst = 0;
+		boolean flag = false;
+
+		for (MarioResult run : runs) {
+			double tempConst = run.getCompletionPercentage();
+			if (tempConst >= 1) {
+				flag = true;
+				this._constraints = 1.0;
+			}
+			else
+				avgConst += tempConst;
+		}
+		if (!flag) {
+			avgConst /= runs.length;
+			this._constraints = avgConst;
+		}
 			/*
 			tempConst = runs[1].getCompletionPercentage() - tempConst;
 			if(runs[1].getGameStatus() == GameStatus.WIN && runs[2].getGameStatus() == GameStatus.LOSE) {
 				tempConst = 1;
 			}*/
-			for(int i = 1; i < runs.length; i++) {
-				tempConst += runs[i].getCompletionPercentage();	
-			}
-			tempConst /= runs.length;
-		}
+		//	for(int i = 1; i < runs.length; i++) {
+		//		tempConst += runs[i].getCompletionPercentage();	
+		//	}
+		//	tempConst /= runs.length;
+			
+		
 		//		if(this._age > 0) {
 		//			this._constraints = Math.min(this._constraints, tempConst);
 		//		}
 		//		else {
-		this._constraints = tempConst;
+		// this._constraints = avgConst;
 		//		}
 	}
 
@@ -444,7 +459,6 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			double penalty = numberOfActionsLeft * 1.25;
 			fitnessScore -= penalty;
 		}
-		System.out.println(Boolean.parseBoolean(this._parameters.get("punishExtraMechs")));
 		if(Boolean.parseBoolean(this._parameters.get("punishExtraMechs"))) {
 			double a = Double.parseDouble(this._parameters.get("a"));
 			double b = Double.parseDouble(this._parameters.get("b"));
