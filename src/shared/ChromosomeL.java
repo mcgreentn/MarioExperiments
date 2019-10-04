@@ -20,6 +20,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	protected int _appendingSize;
 	protected double _constraints;
 	protected double _fitness;
+	protected double _matchMechs;
+	protected double _missingMechs;
+	protected double _extraMechs;
 	protected int[] _dimensions;
 	protected ScenesLibrary _library;
 	private double _constraintProbability;
@@ -109,6 +112,15 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	}
 	public double getFitness() {
 		return this._fitness;
+	}
+	public double getExtraMechs() {
+		return this._extraMechs;
+	}
+	public double getMissingMechs() {
+		return this._missingMechs;
+	}
+	public double getMatchMechs() {
+		return this._matchMechs;
 	}
 	public String getGenes() {
 		String result = "" + this._genes[0];
@@ -235,8 +247,11 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		this._age = Integer.parseInt(parts[0]);
 		this._constraints = Double.parseDouble(parts[1]);
 		this._fitness = Double.parseDouble(parts[2]);
-		this._dimensions = new int[parts.length - 3];
-		for(int i=3; i<parts.length; i++) {
+		this._matchMechs = Double.parseDouble(parts[3]);
+		this._missingMechs = Double.parseDouble(parts[4]);
+		this._extraMechs = Double.parseDouble(parts[5]);
+		this._dimensions = new int[parts.length - 6];
+		for(int i=6; i<parts.length; i++) {
 			this._dimensions[i-3] = Integer.parseInt(parts[i]);
 		}
 	}
@@ -260,6 +275,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			if (tempConst >= 1) {
 				flag = true;
 				this._constraints = 1.0;
+				break;
 			}
 			else
 				avgConst += tempConst;
@@ -420,7 +436,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		return playMechanics;
 	}
 
-	public double calculateFitness(MarioResult run)
+	public ArrayList<Double> calculateFitness(MarioResult run)
 	{
 		double fitnessScore = 100;
 
@@ -429,16 +445,16 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		ArrayList<String> agentActions = this.reduceMechanicsToActions(agentMechanicsArrayExcess);
 		ArrayList<String> playthroughActions = new ArrayList<String>(Arrays.asList(this._playthroughMechanics));
 		//go through agentActions and compareActions
-		int mechanicsMissed = 0;
+		double missedMechs = 0;
 		int agentMechanicPointer = 0; 
 		int playthroughMechanicPointer = 0;
-		int extraMechs = 0;
+		double extraMechs = 0;
 		for(; playthroughMechanicPointer < playthroughActions.size(); playthroughMechanicPointer++) {
 			String mechanicToCheck = playthroughActions.get(playthroughMechanicPointer);
 			ArrayList<String> subArray = new ArrayList<String>(agentActions.subList(agentMechanicPointer, agentActions.size()));
 			int mechanicIndex = subArray.indexOf(mechanicToCheck);
 			if(mechanicIndex == -1) {
-				mechanicsMissed += 1;
+				missedMechs += 1;
 			}
 			else {
 				agentMechanicPointer += mechanicIndex + 1;
@@ -450,15 +466,20 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 		}
 		fitnessScore = 100.0;
-		//lose points for the mechanics it missed
-		fitnessScore -= (mechanicsMissed * 5);
 
-		//lose points for mechanics left
+
+		//lose points for mechanics leftover from target playthrough
+		double numberOfActionsLeft = 0;
 		if(playthroughMechanicPointer  < playthroughActions.size()) {
-			double numberOfActionsLeft = playthroughActions.size() - playthroughMechanicPointer;
-			double penalty = numberOfActionsLeft * 1.25;
-			fitnessScore -= penalty;
+			numberOfActionsLeft = playthroughActions.size() - playthroughMechanicPointer;
+			
 		}
+		missedMechs += numberOfActionsLeft;
+		
+		//lose points for the mechanics the chromosome missed from the target sequence
+		fitnessScore -= (missedMechs * 5 );
+		
+		// penalize for extra mechanics in the chromosome, as parameters allow
 		if(Boolean.parseBoolean(this._parameters.get("punishExtraMechs"))) {
 			double a = Double.parseDouble(this._parameters.get("a"));
 			double b = Double.parseDouble(this._parameters.get("b"));
@@ -469,26 +490,46 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			double penalty = percentageP * equation * Math.abs(fitnessScore);
 			System.out.println("Extra Count: " + extraMechs + " || Penalty: " + penalty + " || " + fitnessScore + " -> " + (fitnessScore-penalty));
 			fitnessScore -= penalty;
-			
 		}
 
 		if(Boolean.parseBoolean(this._parameters.get("punishNeverMechs"))) {
 			
 		}
+		// add all mechanic counts to a returnable list
+		ArrayList<Double> list = new ArrayList<Double>();
+		list.add(fitnessScore);
+		list.add(playthroughActions.size() - missedMechs);
+		list.add(missedMechs);
+		list.add(extraMechs);
 		
-		return fitnessScore;
+		return list;
 	}
 	public void calculateFitnessEntropy(MarioResult[] runs) {
-		double score = this.calculateFitness(runs[0]);
+		ArrayList<Double> sourceList = this.calculateFitness(runs[0]);
+		double score = sourceList.get(0);
+		double matchMechs = sourceList.get(1);
+		double missingMechs = sourceList.get(2);
+		double extraMechs = sourceList.get(3);
 		for(int i = 1; i < runs.length; i++) {
-			score += this.calculateFitness(runs[i]);
+			ArrayList<Double> sl = this.calculateFitness(runs[i]);
+			score += sl.get(0);
+			matchMechs += sl.get(1);
+			missingMechs += sl.get(2);
+			extraMechs += sl.get(3);	
 		}
 		this._fitness = score / (double)runs.length;
+		this._matchMechs = matchMechs / (double)runs.length;
+		this._missingMechs = missingMechs / (double)runs.length;
+		this._extraMechs = extraMechs / (double)runs.length;
 	}
 
 	//since map elites uses 1 game with 1 agent, we only need the first result
 	public void calculateFitnessEntropy(MarioResult run) {
-		this._fitness = this.calculateFitness(run);
+		ArrayList<Double> sourceList = this.calculateFitness(run);
+		this._fitness = sourceList.get(0);
+		this._matchMechs = sourceList.get(1);
+		this._missingMechs = sourceList.get(2);
+		this._extraMechs = sourceList.get(3);
 	}
 
 	//map elites -> 1 game, 1 agent
@@ -539,6 +580,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		}
 		else {
 			this._fitness = 0;
+			this._matchMechs = 0;
+			this._missingMechs = -1;
+			this._extraMechs = -1;
 		}
 	}
 

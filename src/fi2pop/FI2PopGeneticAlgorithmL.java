@@ -254,6 +254,9 @@ public class FI2PopGeneticAlgorithmL {
 		double maxConstraints = 0;
 		double avgConstraints = 0;
 		double minConstraints = 0;
+		double extraMechs = 0;
+		double missingMechs = 0;
+		double matchMechs = 0;
 
 		ChromosomeL[][] pop = this.getFeasibleInfeasible(true);
 		ChromosomeL[] feasible = pop[0];
@@ -267,6 +270,9 @@ public class FI2PopGeneticAlgorithmL {
 			maxFitness = feasible[0].getFitness();
 			minFitness = feasible[numFeasible - 1].getFitness();
 			avgFitness /= numFeasible;
+			extraMechs = feasible[0].getExtraMechs();
+			missingMechs = feasible[0].getMissingMechs();
+			matchMechs = feasible[0].getMatchMechs();
 		}
 
 		numInfeasible = infeasible.length;
@@ -284,6 +290,6 @@ public class FI2PopGeneticAlgorithmL {
 		//		avgConstraints /= (numInfeasible+numFeasible);
 
 
-		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints};
+		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
 	}
 }

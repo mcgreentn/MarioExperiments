@@ -263,7 +263,7 @@ public class FI2PopChildRunnerL {
 				System.out.println("Writing Chromosomes results.");
 				String[] values = new String[chromosomes.length];
 				for(int i=0; i<values.length; i++) {
-					values[i] = chromosomes[i].getAge() + "," + chromosomes[i].getConstraints() + "," + chromosomes[i].getFitness() + "\n";
+					values[i] = chromosomes[i].getAge() + "," + chromosomes[i].getConstraints() + "," + chromosomes[i].getFitness() + "," + chromosomes[i].getMatchMechs() + "," + chromosomes[i].getMissingMechs()  + ","+ chromosomes[i].getExtraMechs() + "\n";
 					values[i] += chromosomes[i].getGenes() + "\n";
 					values[i] += chromosomes[i].toString() + "\n";
 				}
