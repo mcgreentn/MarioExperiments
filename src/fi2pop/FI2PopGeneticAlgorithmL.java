@@ -274,6 +274,11 @@ public class FI2PopGeneticAlgorithmL {
 			missingMechs = feasible[0].getMissingMechs();
 			matchMechs = feasible[0].getMatchMechs();
 		}
+		double avgDifference = 0.0;
+		for(int i = 1; i < numFeasible; i++) {
+			avgDifference += (this.calculateDistance(feasible[0], feasible[i]) / 14);
+		}
+		avgDifference /= numFeasible - 1;
 
 		numInfeasible = infeasible.length;
 		//		for(ChromosomeL c:feasible) {
@@ -291,5 +296,18 @@ public class FI2PopGeneticAlgorithmL {
 
 
 		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
+	}
+	
+	public double calculateDistance(ChromosomeL one, ChromosomeL two) {
+		int[] oneGenes = one.getGenesArray();
+		int[] twoGenes = two.getGenesArray();
+		
+		double difference = 0;
+		for(int i = 0; i < oneGenes.length; i++) {
+			if(oneGenes[i] != twoGenes[i]) {
+				difference += 1;
+			}
+		}
+		return difference;
 	}
 }

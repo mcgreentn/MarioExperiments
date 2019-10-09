@@ -228,6 +228,8 @@ public class FI2PopParentRunnerL {
 		while(true) {
 			try {
 				System.out.println("Generation " + iteration);
+				// TODO: get the diversity of the population
+				
 				String[] levels = new String[chromosomes.length];
 				for(int i=0; i<chromosomes.length; i++) {
 					levels[i] = chromosomes[i].getAge() + ",";
@@ -259,6 +261,8 @@ public class FI2PopParentRunnerL {
 				System.out.println("Generate Next Population");
 				gen.getNextGeneration();
 				chromosomes = gen.getPopulation();
+				
+				
 				iteration += 1;
 			} catch (Exception e) {
 				e.printStackTrace();

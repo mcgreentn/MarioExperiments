@@ -136,6 +136,10 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public String[] getPlaythroughMechanics() {
 		return this._playthroughMechanics;
 	}
+	
+	public int[] getGenesArray() {
+		return this._genes;
+	}
 
 	public void advanceAge() {
 		this._age += 1; 
