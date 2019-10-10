@@ -66,7 +66,6 @@ public class FI2PopGeneticAlgorithmL {
     //10% smart dude -> 1 actual smart, rest mutation of smart dude
 		//rest random
 		int smart_pop = (int)(0.1*this._populationSize);
-		this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 		this._population[0].smartInitialization();
 		for(int i = 1; i < smart_pop; i++) {
 			this._population[i] = (ChromosomeL)this._population[0].clone();

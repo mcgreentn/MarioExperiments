@@ -26,14 +26,6 @@ import shared.evaluator.ChildEvaluator;
 public class FI2PopChildRunnerL {
 
 	private static void runExperiment(ChromosomeL c, HashMap<String, String> parameters) {
-		/*unit test*/
-		//		MarioAgent[] agents = new MarioAgent[5];
-		//		for(int i = 0; i < agents.length; i++) {
-		//			agents[i] = new agents.robinBaumgarten.Agent();
-		//		}
-		//		c.calculateResults(new MarioGame(), agents, 20);
-		/*original*/
-
 		if(c.getAge() == 1 || c.getAge() == 0) {
 			int playthroughCount = Integer.parseInt(parameters.get("playthroughCount"));
 			MarioAgent[] marioAgents = new MarioAgent[playthroughCount];
@@ -65,7 +57,6 @@ public class FI2PopChildRunnerL {
 			String sceneMechanics = folder.getName().replace(",", "");
 			File[] files = folder.listFiles();
 			Arrays.sort(files);
-			int i = 0;
 			for(File f : files) {
 				String[] lines = Files.readAllLines(f.toPath()).toArray(new String[0]);
 				String fitness = lines[0].split("fitness: ")[1];
@@ -195,7 +186,6 @@ public class FI2PopChildRunnerL {
 		 // Get the Java runtime
         Runtime runtime = Runtime.getRuntime();
        
-		// TODO Auto-generated method stub
 		int id = Integer.parseInt(args[0]);
 		int size = Integer.parseInt(args[1]);
 		int startIndex = id * size;
