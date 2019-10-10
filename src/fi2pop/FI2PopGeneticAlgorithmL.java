@@ -63,8 +63,9 @@ public class FI2PopGeneticAlgorithmL {
 
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
-    //10% smart dude -> 1 actual smart, rest mutation of smart dude
+		//10% smart dude -> 1 actual smart, rest mutation of smart dude
 		//rest random
+		this._population[0] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 		int smart_pop = (int)(0.1*this._populationSize);
 		this._population[0].smartInitialization();
 		for(int i = 1; i < smart_pop; i++) {
@@ -79,7 +80,7 @@ public class FI2PopGeneticAlgorithmL {
 
 	private ChromosomeL rankSelection(ChromosomeL[] pop) {
 		double[] ranks = new double[pop.length];
-		ranks[0] = 1;
+		ranks[0] = 1; 
 		for(int i=1; i<pop.length; i++) {
 			ranks[i] = ranks[i-1] + i + 1;
 		}
