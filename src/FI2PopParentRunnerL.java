@@ -211,7 +211,7 @@ public class FI2PopParentRunnerL {
 		
 		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
 		System.out.println("Initialize FI2Pop");
-		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, popSize, chromosomeLength, appendingSize, crossover, mutation, elitism, playthroughMechanics, variableNumberOfMechanics);
+		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, playthroughMechanics, parameters);
 		ParentEvaluator parent = new ParentEvaluator(parameters.get("inputFolder"), parameters.get("outputFolder"));
 		String typeOfInitialization = parameters.get("initialization");
 		System.out.println("First Batch of Chromosomes " + typeOfInitialization);
@@ -228,6 +228,8 @@ public class FI2PopParentRunnerL {
 		while(true) {
 			try {
 				System.out.println("Generation " + iteration);
+				// TODO: get the diversity of the population
+				
 				String[] levels = new String[chromosomes.length];
 				for(int i=0; i<chromosomes.length; i++) {
 					levels[i] = chromosomes[i].getAge() + ",";
@@ -259,6 +261,8 @@ public class FI2PopParentRunnerL {
 				System.out.println("Generate Next Population");
 				gen.getNextGeneration();
 				chromosomes = gen.getPopulation();
+				
+				
 				iteration += 1;
 			} catch (Exception e) {
 				e.printStackTrace();
