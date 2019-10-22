@@ -250,7 +250,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		while(playthroughMechanicIndex < this._playthroughMechanics.length) {
 			String t = levelMechanics.get(this._numOfScenes-1);
 			StringBuilder mechanicString = new StringBuilder(t);
-			for(int z = 0; z < mechanicString.length(); z++){
+ 			for(int z = 0; z < mechanicString.length(); z++){
 				if(mechanicString.charAt(z) - '1' != 0){
 					mechanicString.setCharAt(z, this._playthroughMechanics[playthroughMechanicIndex].charAt(z));
 				}
