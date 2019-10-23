@@ -288,11 +288,12 @@ public class FI2PopGeneticAlgorithmL {
 		ChromosomeL[] both = new ChromosomeL[feasible.length + infeasible.length];
 		System.arraycopy(feasible, 0, both, 0, feasible.length);
 		System.arraycopy(infeasible, 0, both, feasible.length, infeasible.length);
-		Double[] distances = this.getPercentileDistances(both);
+		double[] distances = this.getPercentileDistances(both);
 		
 		//TODO Finish this
+		String distString = "";
 		for(int i = 0; i < distances.length; i++) {
-			
+			distString += distances[i] + ",";
 		}
 		numInfeasible = infeasible.length;
 		if(numInfeasible > 0) {
@@ -303,9 +304,13 @@ public class FI2PopGeneticAlgorithmL {
 			minConstraints = infeasible[numInfeasible - 1].getConstraints();
 			avgConstraints /= numInfeasible;
 		}
-
-
-		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs, distances[0], distances[1], distances[2], distances[3], distances[4]};
+		
+		double[] temp = {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
+		double[] stats = new double[temp.length + distances.length];
+		System.arraycopy(temp, 0, stats, 0, temp.length);
+		System.arraycopy(distances, 0, stats, temp.length, distances.length);
+		
+		return stats;
 	}
 	
 	/***
@@ -313,9 +318,9 @@ public class FI2PopGeneticAlgorithmL {
 	 * @param pop the population
 	 * @return an array of distances
 	 */
-	public Double[] getPercentileDistances(ChromosomeL[] pop) {
+	public double[] getPercentileDistances(ChromosomeL[] pop) {
 		// create the distances array
-		Double[] distances = new Double[pop.length];
+		double[] distances = new double[pop.length];
 		Arrays.fill(distances, 0.0);
 //		int unit = pop.length / 4;
 		
