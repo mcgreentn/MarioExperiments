@@ -338,15 +338,14 @@ public class FI2PopGeneticAlgorithmL {
 //		}
 		System.out.println("length: " + pop.length);
 		for(int i = 0; i < pop.length; i++) {
-			long now = System.currentTimeMillis();
+//			long now = System.currentTimeMillis();
 			ChromosomeL target = pop[i];
 			for(int j = 0; j < pop.length; j++) {
 				distances[i] += this.calculateDistance(target, pop[j]);
 			}
 			distances[i] /= pop.length;
 			
-			long then = System.currentTimeMillis();
-			System.out.println("time taken: " + (then-now) + " || " + then + ", " + now);
+//			long then = System.currentTimeMillis();
 		}
 		return distances;
 	}
