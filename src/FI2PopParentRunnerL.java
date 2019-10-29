@@ -253,7 +253,7 @@ public class FI2PopParentRunnerL {
 				f.mkdir();
 				gen.writePopulation(parameters.get("resultFolder") + iteration + "/");
 				appendInfo(parameters.get("resultFolder"), iteration, gen);
-				//deleteDirectory(new File(parameters.get("resultFolder") + (iteration - 1) + "/"));
+				deleteDirectory(new File(parameters.get("resultFolder") + (iteration - 1) + "/"));
 				if(maxIterations > 0 && iteration >= maxIterations) {
 					System.out.println("Done! iteration: " + iteration + "; maxIterations: " + maxIterations);
 					break;
