@@ -4,9 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Date;
 
 import shared.Chromosome;
 import shared.ChromosomeL;
@@ -63,10 +65,10 @@ public class FI2PopGeneticAlgorithmL {
 
 	public void smartChomosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
-    //10% smart dude -> 1 actual smart, rest mutation of smart dude
+		//10% smart dude -> 1 actual smart, rest mutation of smart dude
 		//rest random
-		int smart_pop = (int)(0.1*this._populationSize);
 		this._population[0] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+		int smart_pop = (int)(0.1*this._populationSize);
 		this._population[0].smartInitialization();
 		for(int i = 1; i < smart_pop; i++) {
 			this._population[i] = (ChromosomeL)this._population[0].clone();
@@ -80,7 +82,7 @@ public class FI2PopGeneticAlgorithmL {
 
 	private ChromosomeL rankSelection(ChromosomeL[] pop) {
 		double[] ranks = new double[pop.length];
-		ranks[0] = 1;
+		ranks[0] = 1; 
 		for(int i=1; i<pop.length; i++) {
 			ranks[i] = ranks[i-1] + i + 1;
 		}
@@ -283,16 +285,17 @@ public class FI2PopGeneticAlgorithmL {
 			missingMechs = feasible[0].getMissingMechs();
 			matchMechs = feasible[0].getMatchMechs();
 		}
-		double avgDifference = 0.0;
-		for(int i = 1; i < numFeasible; i++) {
-			avgDifference += (this.calculateDistance(feasible[0], feasible[i]) / 14);
+		ChromosomeL[] both = new ChromosomeL[feasible.length + infeasible.length];
+		System.arraycopy(feasible, 0, both, 0, feasible.length);
+		System.arraycopy(infeasible, 0, both, feasible.length, infeasible.length);
+		double[] distances = this.getPercentileDistances(both);
+		
+		//TODO Finish this
+		String distString = "";
+		for(int i = 0; i < distances.length; i++) {
+			distString += distances[i] + ",";
 		}
-		avgDifference /= numFeasible - 1;
-
 		numInfeasible = infeasible.length;
-		//		for(ChromosomeL c:feasible) {
-		//			avgConstraints += c.getConstraints();
-		//		}
 		if(numInfeasible > 0) {
 			for(ChromosomeL c:infeasible) {
 				avgConstraints += c.getConstraints();
@@ -301,12 +304,58 @@ public class FI2PopGeneticAlgorithmL {
 			minConstraints = infeasible[numInfeasible - 1].getConstraints();
 			avgConstraints /= numInfeasible;
 		}
-		//		avgConstraints /= (numInfeasible+numFeasible);
-
-
-		return new double[] {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
+		
+		double[] temp = {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
+		double[] stats = new double[temp.length + distances.length];
+		System.arraycopy(temp, 0, stats, 0, temp.length);
+		System.arraycopy(distances, 0, stats, temp.length, distances.length);
+		
+		return stats;
 	}
 	
+	/***
+	 * Calculates the 0, 25, 50, 75, and 100 chromosome percentile swap distances
+	 * @param pop the population
+	 * @return an array of distances
+	 */
+	public double[] getPercentileDistances(ChromosomeL[] pop) {
+		// create the distances array
+		double[] distances = new double[pop.length];
+		Arrays.fill(distances, 0.0);
+//		int unit = pop.length / 4;
+		
+//		for(int i = 0; i < 5; i++) {
+//			long now = System.currentTimeMillis();
+//			int targetIdx = (unit*i > 0 ? 0 : unit*i);
+//			ChromosomeL target = pop[targetIdx];
+//			for(int j = 0; j < pop.length; j++) {
+//				distances[i] += this.calculateDistance(target, pop[j]);
+//			}
+//			distances[i] /= pop.length;
+//			
+//			long then = System.currentTimeMillis();
+//			System.out.println("time taken: " + (then-now) + " || " + then + ", " + now);
+//		}
+		System.out.println("length: " + pop.length);
+		for(int i = 0; i < pop.length; i++) {
+//			long now = System.currentTimeMillis();
+			ChromosomeL target = pop[i];
+			for(int j = 0; j < pop.length; j++) {
+				distances[i] += this.calculateDistance(target, pop[j]);
+			}
+			distances[i] /= pop.length;
+			
+//			long then = System.currentTimeMillis();
+		}
+		return distances;
+	}
+	
+	/***
+	 * Calculates the swap distance between two chromosomes
+	 * @param one chromosome one
+	 * @param two chromosome two
+	 * @return the swap distance between one and two
+	 */
 	public double calculateDistance(ChromosomeL one, ChromosomeL two) {
 		int[] oneGenes = one.getGenesArray();
 		int[] twoGenes = two.getGenesArray();
