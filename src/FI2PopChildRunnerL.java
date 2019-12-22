@@ -208,7 +208,8 @@ public class FI2PopChildRunnerL {
 
 
 		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
-		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
+		int minChromosomeLength = Integer.parseInt(parameters.get("minChromosomeLength"));
+		int maxChromosomeLength = Integer.parseInt(parameters.get("maxChromosomeLength"));
 		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
 		String playthroughMechanicsFolder = parameters.get("playthroughMechanicsFolder");
 		String playthroughMechanicsLevelName = parameters.get("playthroughMechanicsLevelName"); 
@@ -222,7 +223,8 @@ public class FI2PopChildRunnerL {
 			levels = child.readChromosomesL();
 			chromosomes = new ChromosomeL[levels.length];
 			for(int i=0; i<chromosomes.length; i++) {
-				chromosomes[i] = new ChromosomeL(rnd, lib, chromosomeLength, appendingSize, playthroughMechanics, variableNumberOfMechanics, parameters);
+				int numOfScenes = 0; //since we are using stringInitialize, the numOfScenes will be set/overwritten from there
+				chromosomes[i] = new ChromosomeL(rnd, lib, numOfScenes, appendingSize, playthroughMechanics, variableNumberOfMechanics, parameters);
 				chromosomes[i].stringInitialize(levels[i]);
 			}
 		}catch (Exception e) {

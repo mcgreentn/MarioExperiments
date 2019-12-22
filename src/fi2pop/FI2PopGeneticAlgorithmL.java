@@ -25,7 +25,9 @@ public class FI2PopGeneticAlgorithmL {
 	 */
 	private ChromosomeL[] _population;
 	private int _populationSize;
-	private int _chromosomeLength;
+	private int _minChromosomeLength;
+	private int _maxChromosomeLength;
+//	private int _chromosomeLength;
 	private int _appendingSize;
 	private double _crossover;
 	private double _mutation;
@@ -40,7 +42,9 @@ public class FI2PopGeneticAlgorithmL {
 		this._parameters = parameters;
 		this._lib = lib;
 		this._populationSize = Integer.parseInt(this._parameters.get("populationSize"));
-		this._chromosomeLength = Integer.parseInt(this._parameters.get("chromosomeLength"));
+		this._minChromosomeLength = Integer.parseInt(this._parameters.get("minChromosomeLength"));
+		this._maxChromosomeLength = Integer.parseInt(this._parameters.get("maxChromosomeLength"));
+//		this._chromosomeLength = Integer.parseInt(this._parameters.get("chromosomeLength"));
 		this._appendingSize = Integer.parseInt(this._parameters.get("appendingSize"));
 		this._crossover = Double.parseDouble(this._parameters.get("crossover"));
 		this._mutation = Double.parseDouble(this._parameters.get("mutation"));
@@ -58,7 +62,8 @@ public class FI2PopGeneticAlgorithmL {
 	public void randomChromosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {
-			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+			int numOfScenes = this._rnd.nextInt((this._maxChromosomeLength - this._minChromosomeLength) + 1) + this._minChromosomeLength;
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 			this._population[i].randomInitialization();
 		}
 	}
@@ -67,15 +72,17 @@ public class FI2PopGeneticAlgorithmL {
 		this._population = new ChromosomeL[this._populationSize];
 		//10% smart dude -> 1 actual smart, rest mutation of smart dude
 		//rest random
-		this._population[0] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+		int numOfScenes = this._rnd.nextInt((this._maxChromosomeLength - this._minChromosomeLength) + 1) + this._minChromosomeLength;
+		this._population[0] = new ChromosomeL(this._rnd, this._lib, numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 		int smart_pop = (int)(0.1*this._populationSize);
 		this._population[0].smartInitialization();
 		for(int i = 1; i < smart_pop; i++) {
 			this._population[i] = (ChromosomeL)this._population[0].clone();
-			this._population[i].mutatedSmartInitialization();
+			this._population[i].mutatedSmartInitialization(this._minChromosomeLength, this._maxChromosomeLength);
 		}
 		for(int i = smart_pop; i < this._population.length; i++) {
-			this._population[i] = new ChromosomeL(this._rnd, this._lib, this._chromosomeLength, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+			numOfScenes = this._rnd.nextInt((this._maxChromosomeLength - this._minChromosomeLength) + 1) + this._minChromosomeLength;
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
 			this._population[i].randomInitialization();
 		}
 	}
@@ -153,7 +160,7 @@ public class FI2PopGeneticAlgorithmL {
 			if (this._rnd.nextDouble() < this._crossover) {
 				ChromosomeL parent2 = this.rankSelection(usedPopulation);
 				if((parent1.getGenes()).compareTo(parent2.getGenes()) == 0) {
-					child = (ChromosomeL)child.mutate();
+					child = (ChromosomeL)child.mutate(this._minChromosomeLength, this._maxChromosomeLength);
 					
 //					System.out.println("~~~~~~~~~~~~~~~~~~~");
 //					System.out.println("CROSSOVER FAIL; AFTER MUTATION");
@@ -171,7 +178,7 @@ public class FI2PopGeneticAlgorithmL {
 					if((child.getGenes()).compareTo(parent2.getGenes()) == 0 ||
 							(child.getGenes()).compareTo(parent2.getGenes()) == 0
 							) {
-						child = (ChromosomeL)child.mutate();
+						child = (ChromosomeL)child.mutate(this._minChromosomeLength, this._maxChromosomeLength);
 					}
 //					System.out.println("~~~~~~~~~~~~~~~~~~~");
 //					System.out.println("AFTER CROSSOVER: ");
@@ -189,7 +196,7 @@ public class FI2PopGeneticAlgorithmL {
 //							"\n"+ child.getGenes());
 					if (this._rnd.nextDouble() < this._mutation) {
 						
-						child = (ChromosomeL)child.mutate();
+						child = (ChromosomeL)child.mutate(this._minChromosomeLength, this._maxChromosomeLength);
 //						System.out.println("AFTER MUTATION");
 //						System.out.println("\tChild: "+ child.getAge() +
 //								"; Fitness: " + child.getFitness() + 
@@ -198,7 +205,7 @@ public class FI2PopGeneticAlgorithmL {
 					}
 				}
 			} else {
-				child = (ChromosomeL)child.mutate();
+				child = (ChromosomeL)child.mutate(this._minChromosomeLength, this._maxChromosomeLength);
 				
 //				System.out.println("~~~~~~~~~~~~~~~~~~~");
 //				System.out.println("AFTER MUTATION");

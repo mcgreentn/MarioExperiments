@@ -181,6 +181,7 @@ public class FI2PopParentRunnerL {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("STARTING");
 		//get the parameters
 		HashMap<String, String> parameters = null;
 		try {
@@ -199,17 +200,17 @@ public class FI2PopParentRunnerL {
 		}
 		
 		//create FI2Pop 		
-		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
-		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
-		int popSize = Integer.parseInt(parameters.get("populationSize"));
-		double crossover = Double.parseDouble(parameters.get("crossover"));
-		double mutation = Double.parseDouble(parameters.get("mutation"));
-		int elitism = Integer.parseInt(parameters.get("elitism"));
+//		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
+//		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
+//		int popSize = Integer.parseInt(parameters.get("populationSize"));
+//		double crossover = Double.parseDouble(parameters.get("crossover"));
+//		double mutation = Double.parseDouble(parameters.get("mutation"));
+//		int elitism = Integer.parseInt(parameters.get("elitism"));
 		String playthroughMechanicsFolder = parameters.get("playthroughMechanicsFolder");
 		String playthroughMechanicsLevelName = parameters.get("playthroughMechanicsLevelName"); 
 		String[] playthroughMechanics = fillPlaythroughMechanics(playthroughMechanicsFolder+playthroughMechanicsLevelName);
 		
-		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
+//		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
 		System.out.println("Initialize FI2Pop");
 		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, playthroughMechanics, parameters);
 		ParentEvaluator parent = new ParentEvaluator(parameters.get("inputFolder"), parameters.get("outputFolder"));
@@ -232,7 +233,7 @@ public class FI2PopParentRunnerL {
 				
 				String[] levels = new String[chromosomes.length];
 				for(int i=0; i<chromosomes.length; i++) {
-					levels[i] = chromosomes[i].getAge() + ",";
+					levels[i] = chromosomes[i].getAge() + "," + chromosomes[i].getNumberOfScenes() + "\n";
 					levels[i] += chromosomes[i].getGenes() + "\n" + chromosomes[i].toString() + "\n";
 				}
 				System.out.println("length of levels " + levels.length);

@@ -42,11 +42,12 @@ public class ChildEvaluator {
 	}
 
 	public String[][] readChromosomesL() throws IOException {
-		String[][] result = new String[this._size][2];
+		String[][] result = new String[this._size][3];
 		int startIndex = this._id * this._size;
 		for(int i=0; i<this._size; i++) {
 			result[i][0] = Files.readAllLines(Paths.get(this._inputFolder, (startIndex + i) + ".txt")).get(0);
 			result[i][1] = Files.readAllLines(Paths.get(this._inputFolder, (startIndex + i) + ".txt")).get(1);
+			result[i][2] = Files.readAllLines(Paths.get(this._inputFolder, (startIndex + i) + ".txt")).get(2);
 		}
 		return result;
 	}

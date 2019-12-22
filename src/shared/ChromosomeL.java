@@ -81,12 +81,17 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public void stringInitialize(String[] level) {
 		String[] parts = level[0].split(",");
 		this._age = Integer.parseInt(parts[0]);
+		this._numOfScenes = Integer.parseInt(parts[1]);
+		String[] geneString = level[1].split(",");
+		this._genes = new int[this._numOfScenes];
+		this._subGenes = new int[this._numOfScenes];
+		String[] subParts = level[2].split(",");
 		for (int i = 0; i < this._genes.length; i++) {
-			this._genes[i] = Integer.parseInt(parts[i + 1]);
+			this._genes[i] = Integer.parseInt(geneString[i]);
 		}
-		String[] subParts = level[1].split(",");
+		String[] subPartsGenes = level[2].split(",");
 		for(int i = 0; i < this._subGenes.length; i++) {
-			this._subGenes[i] = Integer.parseInt(subParts[i]);
+			this._subGenes[i] = Integer.parseInt(subPartsGenes[i]);
 		}
 	}
 
@@ -103,6 +108,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		return this._constraintProbability;
 	}
 
+	public int getNumberOfScenes() {
+		return this._numOfScenes;
+	}
 	public int getAge() {
 		return this._age;
 	}
@@ -151,6 +159,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		int avg_mechanics = 3;
 		if(this._variableNumOfMechInScene) {
 			avg_mechanics = (int) Math.ceil((double)this._numMechanicsInPlaythrough/this._numOfScenes);
+			if (avg_mechanics > 10) {
+				avg_mechanics = 7;
+			}
 		}
 		return avg_mechanics;
 	}
@@ -178,32 +189,77 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			this.createGeneRandomly(i, avg_mechanics);
 		}
 		//the last gene will have the remaining scenes (in case of an uneven split)
+		//if remaining scenes exceedes 10 -> force it to be 7
 		avg_mechanics = this._numMechanicsInPlaythrough - avg_mechanics * (this._genes.length-1);
+		if(avg_mechanics > 10) {
+			avg_mechanics = 7;
+		}
 		if(!this._variableNumOfMechInScene || avg_mechanics < 0) {
 			avg_mechanics = 3;
 		}
 		this.createGeneRandomly(i, avg_mechanics);
 	}
 	
-	public void mutatedSmartInitialization() {
-		System.out.println("~~~~~~~~~~~~\nPOP Original");
-		System.out.println(this.getGenes());
-		Set<Integer> mutatedSceneIndex = new HashSet<Integer> ();
-		int num_scenes_mutate = (int)(0.3 * this._numOfScenes);
-		for(int i = 0; i < num_scenes_mutate; i++) {
-			int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
-			int indexToMutate = this._rnd.nextInt(this._genes.length);
-			while(mutatedSceneIndex.contains(indexToMutate)) {
-				indexToMutate = this._rnd.nextInt(this._genes.length);
-			}
-			mutatedSceneIndex.add(indexToMutate);
-			this._genes[indexToMutate] = sceneIndex;
-			this._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+	public void mutatedSmartInitialization(int min, int max) {
+		int choice = this._rnd.nextInt(2);
+		//deleting a scene
+		if (choice == 0  && this._numOfScenes > min) {
+			int indexToDelete = this._rnd.nextInt(this._genes.length);
+			int[] new_genes = new int[this._genes.length - 1]; 
+			int[] new_subGenes = new int[this._subGenes.length-1];
+			System.arraycopy(this._genes, 0, new_genes, 0, indexToDelete); 
+			System.arraycopy(this._subGenes, 0, new_subGenes, 0, indexToDelete); 
+	        // Copy the elements from index + 1 till end 
+	        // from original array to the other array 
+	        System.arraycopy(this._genes, indexToDelete + 1, 
+	        				 new_genes, indexToDelete, 
+	                         this._genes.length - indexToDelete - 1); 
+	        System.arraycopy(this._subGenes, indexToDelete + 1, 
+	        			 	 new_subGenes, indexToDelete, 
+	        			 	 this._subGenes.length - indexToDelete - 1);
+	        this._genes = new_genes;
+	        this._subGenes = new_subGenes;
+	        this._numOfScenes -= 1;
 		}
-		System.out.println("\t"+num_scenes_mutate+"\n\t"+mutatedSceneIndex);
-		System.out.println("~~~~~~~~~~~~\nPOP MUTATED");
-		System.out.println(this.getGenes());
-		System.out.println(); 
+		//adding a scene
+		else if(choice == 1 && this._numOfScenes < max) {
+			int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
+			int indexToAdd = this._rnd.nextInt(this._genes.length);
+			int[] new_genes = new int[this._genes.length + 1]; 
+			int[] new_subGenes = new int[this._subGenes.length + 1];
+			for (int i = 0; i < new_genes.length; i++) {
+				if (i < indexToAdd) {
+					new_genes[i] = this._genes[i];
+					new_subGenes[i] = this._subGenes[i];
+				}
+				else if (i == indexToAdd){
+					new_genes[i] = sceneIndex;
+					new_subGenes[i] = this._library.getSubSceneIndex(sceneIndex);
+				}
+				else {
+					new_genes[i] = this._genes[i-1];
+					new_subGenes[i] = this._subGenes[i-1];
+				}
+			}
+			this._genes = new_genes;
+	        this._subGenes = new_subGenes;
+			this._numOfScenes += 1;
+		}
+		//mutating a scene
+		else {
+			Set<Integer> mutatedSceneIndex = new HashSet<Integer> ();
+			int num_scenes_mutate = (int)(0.3 * this._numOfScenes);
+			for(int i = 0; i < num_scenes_mutate; i++) {
+				int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
+				int indexToMutate = this._rnd.nextInt(this._genes.length);
+				while(mutatedSceneIndex.contains(indexToMutate)) {
+					indexToMutate = this._rnd.nextInt(this._genes.length);
+				}
+				mutatedSceneIndex.add(indexToMutate);
+				this._genes[indexToMutate] = sceneIndex;
+				this._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+			}
+		}
 	}
 
 	public void smartInitialization() {
@@ -613,13 +669,62 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		}
 	}
 
-	public ChromosomeL mutate() {
+	public ChromosomeL mutate(int min, int max) {
 		ChromosomeL mutated = this.clone();
-		int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
-		int indexToMutate = mutated._rnd.nextInt(mutated._genes.length);
-		mutated._genes[indexToMutate] = sceneIndex;
-		mutated._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
-
+		int choice = mutated._rnd.nextInt(2);
+		//deleting a scene
+		if (choice == 0  && mutated._numOfScenes > min) {
+			System.out.println("Mutation - Deleting");
+			int indexToDelete = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
+			int[] new_genes = new int[mutated._genes.length - 1]; 
+			int[] new_subGenes = new int[mutated._subGenes.length-1];
+			System.arraycopy(mutated._genes, 0, new_genes, 0, indexToDelete); 
+			System.arraycopy(mutated._subGenes, 0, new_subGenes, 0, indexToDelete); 
+	        // Copy the elements from index + 1 till end 
+	        // from original array to the other array 
+	        System.arraycopy(mutated._genes, indexToDelete + 1, 
+	        				 new_genes, indexToDelete, 
+	        				 mutated._genes.length - indexToDelete - 1); 
+	        System.arraycopy(mutated._subGenes, indexToDelete + 1, 
+	        			 	 new_subGenes, indexToDelete, 
+	        			 	mutated._subGenes.length - indexToDelete - 1);
+	        mutated._genes = new_genes;
+	        mutated._subGenes = new_subGenes;
+	        mutated._numOfScenes -= 1;
+		}
+		//adding a scene
+		else if(choice == 1 && mutated._numOfScenes < max) {
+			System.out.println("Mutation - Adding");
+			int sceneIndex = mutated._rnd.nextInt(this._library.getNumberOfScenes());
+			int indexToAdd = mutated._rnd.nextInt(this._genes.length);
+			int[] new_genes = new int[mutated._genes.length + 1]; 
+			int[] new_subGenes = new int[mutated._subGenes.length + 1];
+			for (int i = 0; i < new_genes.length; i++) {
+				if (i < indexToAdd) {
+					new_genes[i] = mutated._genes[i];
+					new_subGenes[i] = mutated._subGenes[i];
+				}
+				else if (i == indexToAdd){
+					new_genes[i] = sceneIndex;
+					new_subGenes[i] = mutated._library.getSubSceneIndex(sceneIndex);
+				}
+				else {
+					new_genes[i] = mutated._genes[i-1];
+					new_subGenes[i] = mutated._subGenes[i-1];
+				}
+			}
+			mutated._genes = new_genes;
+			mutated._subGenes = new_subGenes;
+			mutated._numOfScenes += 1;
+		}
+		//mutating a scene
+		else {
+			System.out.println("Mutation - Mutating");
+			int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
+			int indexToMutate = mutated._rnd.nextInt(mutated._genes.length);
+			mutated._genes[indexToMutate] = sceneIndex;
+			mutated._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+		}
 		return mutated;
 	}
 
