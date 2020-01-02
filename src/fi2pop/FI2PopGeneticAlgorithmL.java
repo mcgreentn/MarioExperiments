@@ -368,10 +368,21 @@ public class FI2PopGeneticAlgorithmL {
 		int[] twoGenes = two.getGenesArray();
 		
 		double difference = 0;
-		for(int i = 0; i < oneGenes.length; i++) {
+		
+		// find the smaller one
+		int length = oneGenes.length;
+		int biggerLength = twoGenes.length;
+		if (oneGenes.length > twoGenes.length) {
+			length = twoGenes.length;
+			biggerLength = oneGenes.length;
+		}
+		for(int i = 0; i < length; i++) {
 			if(oneGenes[i] != twoGenes[i]) {
 				difference += 1;
 			}
+		}
+		if (biggerLength != length) {
+			difference += biggerLength - length;
 		}
 		return difference;
 	}
