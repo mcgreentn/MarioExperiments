@@ -671,11 +671,13 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 
 	public ChromosomeL mutate(int min, int max) {
 		ChromosomeL mutated = this.clone();
+		System.out.println("muated numOFScenes: " + mutated._numOfScenes);
+		System.out.println("mutated lentgth: " + mutated._genes.length);
 		int choice = mutated._rnd.nextInt(2);
 		//deleting a scene
 		if (choice == 0  && mutated._numOfScenes > min) {
 			System.out.println("Mutation - Deleting");
-			int indexToDelete = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
+			int indexToDelete = mutated._rnd.nextInt(mutated._genes.length);
 			int[] new_genes = new int[mutated._genes.length - 1]; 
 			int[] new_subGenes = new int[mutated._subGenes.length-1];
 			System.arraycopy(mutated._genes, 0, new_genes, 0, indexToDelete); 
@@ -695,8 +697,8 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		//adding a scene
 		else if(choice == 1 && mutated._numOfScenes < max) {
 			System.out.println("Mutation - Adding");
-			int sceneIndex = mutated._rnd.nextInt(this._library.getNumberOfScenes());
-			int indexToAdd = mutated._rnd.nextInt(this._genes.length);
+			int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
+			int indexToAdd = mutated._rnd.nextInt(mutated._genes.length);
 			int[] new_genes = new int[mutated._genes.length + 1]; 
 			int[] new_subGenes = new int[mutated._subGenes.length + 1];
 			for (int i = 0; i < new_genes.length; i++) {
@@ -729,23 +731,113 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	}
 
 	public ChromosomeL crossover(ChromosomeL c) {
-		ChromosomeL child = this.clone();
-		int index1 = child._rnd.nextInt(child._genes.length);
-		int index2 = child._rnd.nextInt(child._genes.length);
-		while(index2 == index1) {
-			index2 = child._rnd.nextInt(child._genes.length);
+		ChromosomeL child;
+		int choice = this._rnd.nextInt(2);
+		
+		//child is larger
+		//get the index's from the smaller chromosome 
+		//and copy into the larger
+		if (choice == 0) {
+			if (this._genes.length > c._genes.length) {
+				child = this.clone();
+				int index1 = c._rnd.nextInt(c._genes.length);
+				int index2 = c._rnd.nextInt(c._genes.length);
+				while(index2 == index1) {
+					index2 = c._rnd.nextInt(c._genes.length);
+				}
+				if (index1 > index2) {
+					int temp = index2;
+					index2 = index1;
+					index1 = temp;
+				}
+				//copy over from smaller to larger
+				for (int i = index1; i < index2 + 1; i++) {
+					child._genes[i] = c._genes[i];
+					child._subGenes[i] = c._subGenes[i];
+				}
+				return child;
+			}
+			else {
+				child = c.clone();
+				//get the index's from the smaller chromosome
+				int index1 = this._rnd.nextInt(this._genes.length);
+				int index2 = this._rnd.nextInt(this._genes.length);
+				while(index2 == index1) {
+					index2 = this._rnd.nextInt(this._genes.length);
+				}
+				if (index1 > index2) {
+					int temp = index2;
+					index2 = index1;
+					index1 = temp;
+				}
+				for (int i = index1; i < index2 + 1; i++) {
+					child._genes[i] = this._genes[i];
+					child._subGenes[i] = this._subGenes[i];
+				}
+				return child;
+			}
 		}
-		if (index1 > index2) {
-			int temp = index2;
-			index2 = index1;
-			index1 = temp;
+		//child is smaller
+		else {
+			if(this._genes.length < c._genes.length) {
+				child = this.clone();
+				//get the index's from the smaller chromosome
+				int index1 = this._rnd.nextInt(this._genes.length);
+				int index2 = this._rnd.nextInt(this._genes.length);
+				while(index2 == index1) {
+					index2 = this._rnd.nextInt(this._genes.length);
+				}
+				if (index1 > index2) {
+					int temp = index2;
+					index2 = index1;
+					index1 = temp;
+				}
+				for (int i = index1; i < index2 + 1; i++) {
+					child._genes[i] = c._genes[i];
+					child._subGenes[i] = c._subGenes[i];
+				}
+				return child;
+			}
+			else {
+				child = c.clone();
+				//get the index's from the smaller chromosome
+				int index1 = c._rnd.nextInt(c._genes.length);
+				int index2 = c._rnd.nextInt(c._genes.length);
+				while(index2 == index1) {
+					index2 = c._rnd.nextInt(c._genes.length);
+				}
+				if (index1 > index2) {
+					int temp = index2;
+					index2 = index1;
+					index1 = temp;
+				}
+				//copy over from smaller to larger
+				for (int i = index1; i < index2 + 1; i++) {
+					child._genes[i] = this._genes[i];
+					child._subGenes[i] = this._subGenes[i];
+				}
+				return child;
+			}
 		}
 		
-		for (int i = index1; i < index2 + 1; i++) {
-			child._genes[i] = c._genes[i];
-			child._subGenes[i] = c._subGenes[i];
-		}
-		return child;
+		
+//		ChromosomeL child = this.clone();
+//		int index1 = child._rnd.nextInt(child._genes.length);
+//		int index2 = child._rnd.nextInt(child._genes.length);
+//		while(index2 == index1) {
+//			index2 = child._rnd.nextInt(child._genes.length);
+//		}
+//		if (index1 > index2) {
+//			int temp = index2;
+//			index2 = index1;
+//			index1 = temp;
+//		}
+//		
+//		for (int i = index1; i < index2 + 1; i++) {
+//			child._genes[i] = c._genes[i];
+//			child._subGenes[i] = c._subGenes[i];
+//		}
+//		return child;
 	}
 
 	public String toString() {
