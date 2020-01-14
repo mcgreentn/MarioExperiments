@@ -1076,7 +1076,6 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				}
 			} else {
 				//want to merge left but couldn't, default to
-				System.out.println("\twant to merge left but couldn't, default to weighted mutating");
 				mutationChoice = 3;
 			}
 			//option 3: merge right
@@ -1125,7 +1124,6 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				}
 			} else {
 				//want to merge right but couldn't, default to
-				System.out.println("\twant to merge right but couldn't, default to weighted mutating");
 				mutationChoice = 3;
 			}
 			//option 4: mutate - lower mechanics = higher chance, must have mechanics that fired for lower
