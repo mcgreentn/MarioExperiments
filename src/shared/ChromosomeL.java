@@ -2,7 +2,9 @@ package shared;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
@@ -249,15 +251,221 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		else {
 			Set<Integer> mutatedSceneIndex = new HashSet<Integer> ();
 			int num_scenes_mutate = (int)(0.3 * this._numOfScenes);
-			for(int i = 0; i < num_scenes_mutate; i++) {
-				int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
-				int indexToMutate = this._rnd.nextInt(this._genes.length);
-				while(mutatedSceneIndex.contains(indexToMutate)) {
-					indexToMutate = this._rnd.nextInt(this._genes.length);
+			System.out.println("~~~~NEW ONE~~~~~");
+			for(int _i = 0; _i < num_scenes_mutate; _i++) {
+				System.out.println("MUTATING SCENE: " + _i);
+				boolean oneMutateHappen = false;
+				//which scene to mutate - higher chance to pick a scene with more mechanics fired
+				ArrayList<int[]> temp = new ArrayList<int[]>();
+				for(int i = 0; i < this._genes.length; i++) {
+					int singleGene = this._genes[i];
+					String mechanicTemp = this._library.getSceneMechanics(singleGene);
+					int num_mechanics_fired = ((int) mechanicTemp.chars().filter(num -> num == '1').count()) + 1;
+					for (int j = 0; j < num_mechanics_fired; j++) {
+						int[] t = new int[] {singleGene, i};
+						temp.add(t);
+					}
 				}
-				mutatedSceneIndex.add(indexToMutate);
-				this._genes[indexToMutate] = sceneIndex;
-				this._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+				//shuffle the biased arrayList
+				Collections.shuffle(temp);
+				int weightSelected = this._rnd.nextInt(temp.size());
+				int indexToMutate = temp.get(weightSelected)[1];
+				int sceneToMutate = temp.get(weightSelected)[0];
+				
+				System.out.println("indexToMutate: " + indexToMutate);
+				System.out.println("sceneToMutate: " + sceneToMutate);
+				System.out.println("sceneToMutateMechanics: " + this._library.getSceneMechanics(sceneToMutate));
+				System.out.println("genes before: " + Arrays.toString(this._genes));
+				System.out.println("subGenes before: " + Arrays.toString(this._subGenes));
+				int mutationChoice = this._rnd.nextInt(4);
+				//option 1: split
+				if (mutationChoice == 0) {
+					String selectedSceneMechanics = this._library.getSceneMechanics(sceneToMutate);
+					ArrayList<Integer> bitsTurnedOnIndex = new ArrayList<Integer>();
+					for(int i = 0; i < selectedSceneMechanics.length(); i++){
+						if(selectedSceneMechanics.charAt(i) == '1'){
+							bitsTurnedOnIndex.add(i);
+						}
+					}
+					//too few mechanics, dont split, try another mutation field
+					if (bitsTurnedOnIndex.size() <  4) {
+						mutationChoice = this._rnd.nextInt(3) + 1;
+					}
+					else {
+						//split 50% -> go rng left and right
+						int split = bitsTurnedOnIndex.size()/2;
+						StringBuilder leftSceneToAdd = new StringBuilder("000000000000");
+						int addedLeft = 0;
+						StringBuilder rightSceneToAdd = new StringBuilder("000000000000");
+						int addedRight = 0;
+						for (int i = 0; i < bitsTurnedOnIndex.size(); i++) {
+							int leftOrRight = this._rnd.nextInt(2);
+							if ( (leftOrRight == 0 && addedLeft <= split) || addedRight == split) {
+								leftSceneToAdd.setCharAt(bitsTurnedOnIndex.get(i),'1');
+								addedLeft++;
+							} else {
+								rightSceneToAdd.setCharAt(bitsTurnedOnIndex.get(i),'1');
+								addedRight++;
+							}
+						}
+						//chance the split gave us something tht is not in lib, remove mechanics until it is
+						int[] leftSceneAndSubSceneIndex = this._library.getSceneIndex(leftSceneToAdd.toString());
+						int leftRemovingMechanics = 0;
+						while (leftSceneAndSubSceneIndex[0] == -1 || leftSceneAndSubSceneIndex[1] == -1) {
+							leftSceneToAdd.setCharAt(leftRemovingMechanics, '0');
+							leftRemovingMechanics++;
+							leftSceneAndSubSceneIndex = this._library.getSceneIndex(leftSceneToAdd.toString());
+						}
+						int[] rightSceneAndSubSceneIndex = this._library.getSceneIndex(rightSceneToAdd.toString());
+						int rightRemovingMechanics = 0;
+						while (rightSceneAndSubSceneIndex[0] == -1 || rightSceneAndSubSceneIndex[1] == -1) {
+							rightSceneToAdd.setCharAt(rightRemovingMechanics, '0');
+							rightRemovingMechanics++;
+							rightSceneAndSubSceneIndex = this._library.getSceneIndex(rightSceneToAdd.toString());
+						}
+						//chance both sides lost all mechanics
+						//try different mutation scene
+						if (rightSceneToAdd.toString().compareTo("000000000000") == 0 && leftSceneToAdd.toString().compareTo("000000000000") == 0) {
+							mutationChoice = this._rnd.nextInt(4) + 1;
+						}
+						else {
+							//adding the scene
+							int[] new_genes = new int[this._genes.length + 1]; 
+							int[] new_subGenes = new int[this._subGenes.length + 1];
+							for (int i = 0; i < new_genes.length; i++) {
+								if (i < indexToMutate) {
+									new_genes[i] = this._genes[i];
+									new_subGenes[i] = this._subGenes[i];
+								}
+								else if (i == indexToMutate){
+									new_genes[i] = leftSceneAndSubSceneIndex[0];
+									new_subGenes[i] = leftSceneAndSubSceneIndex[1];
+								}
+								else if (i == indexToMutate+1) {
+									new_genes[i] = rightSceneAndSubSceneIndex[0];
+									new_subGenes[i] = rightSceneAndSubSceneIndex[1];
+								}
+								else {
+									new_genes[i] = this._genes[i-1];
+									new_subGenes[i] = this._subGenes[i-1];
+								}
+							}
+							this._genes = new_genes;
+							this._subGenes = new_subGenes;
+							this._numOfScenes += 1;
+							oneMutateHappen = true;
+						}
+					}
+				}
+				//option 2: merge left
+				if (mutationChoice == 1 && indexToMutate > 1 && this._numOfScenes > min && oneMutateHappen != true) {
+					StringBuilder fusionLeft = new StringBuilder("000000000000");
+					int indexLeft = indexToMutate - 1;
+					int sceneLeft = this._genes[indexLeft];
+					
+					String selectedSceneMechanics = this._library.getSceneMechanics(sceneToMutate);
+					String selectedLeftSceneMechanics = this._library.getSceneMechanics(sceneLeft);
+					
+					for(int i = 0; i < selectedSceneMechanics.length(); i++) {
+						if(selectedSceneMechanics.charAt(i) == '1' || selectedLeftSceneMechanics.charAt(i) == '1') {
+							fusionLeft.setCharAt(i, '1');
+						}
+					}
+					
+					//possible that the fusion scene is not in the scene library
+					//if it isnt then scratch and perform the final option, mutate
+					int[] fusedSceneAndSubSceneIndex = this._library.getSceneIndex(fusionLeft.toString());
+					if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
+						mutationChoice = 3;
+					} else {
+						int[] new_genes = new int[this._genes.length - 1]; 
+						int[] new_subGenes = new int[this._subGenes.length-1];
+						//copy elements from 0 to index
+						//from original array to the other array
+						System.arraycopy(this._genes, 0, new_genes, 0, indexToMutate); 
+						System.arraycopy(this._subGenes, 0, new_subGenes, 0, indexToMutate); 
+				        // Copy the elements from index + 1 till end 
+				        // from original array to the other array 
+				        System.arraycopy(this._genes, indexToMutate + 1, 
+				        				 new_genes, indexToMutate, 
+				                         this._genes.length - indexToMutate - 1); 
+				        System.arraycopy(this._subGenes, indexToMutate + 1, 
+				        			 	 new_subGenes, indexToMutate, 
+				        			 	 this._subGenes.length - indexToMutate - 1);
+				        new_genes[indexLeft] = fusedSceneAndSubSceneIndex[0];
+				        new_subGenes[indexLeft] = fusedSceneAndSubSceneIndex[1];
+				        this._genes = new_genes;
+				        this._subGenes = new_subGenes;
+				        this._numOfScenes -= 1;
+				        oneMutateHappen = true;
+					}
+				} else {
+					//want to merge left but couldn't, default to
+					mutationChoice = 3;
+				}
+				//option 3: merge right
+				if (mutationChoice == 2 && indexToMutate < this._genes.length-2 && this._numOfScenes < max && oneMutateHappen != true) {
+					StringBuilder fusionRight = new StringBuilder("000000000000");
+					int indexRight = indexToMutate + 1;
+					int sceneRight = this._genes[indexRight];
+					
+					String selectedSceneMechanics = this._library.getSceneMechanics(sceneToMutate);
+					String selectedLeftSceneMechanics = this._library.getSceneMechanics(sceneRight);
+					
+					for(int i = 0; i < selectedSceneMechanics.length(); i++) {
+						if(selectedSceneMechanics.charAt(i) == '1' || selectedLeftSceneMechanics.charAt(i) == '1') {
+							fusionRight.setCharAt(i, '1');
+						}
+					}
+					
+					//possible that the fusion scene is not in the scene library
+					//if it isnt then scratch and perform the final option, mutate
+					int[] fusedSceneAndSubSceneIndex = this._library.getSceneIndex(fusionRight.toString());
+					if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
+						mutationChoice = 3;
+					} else {
+						int[] new_genes = new int[this._genes.length - 1]; 
+						int[] new_subGenes = new int[this._subGenes.length-1];
+						//copy elements from 0 to index
+						//from original array to the other array
+						System.arraycopy(this._genes, 0, new_genes, 0, indexToMutate); 
+						System.arraycopy(this._subGenes, 0, new_subGenes, 0, indexToMutate); 
+				        // Copy the elements from index + 1 till end 
+				        // from original array to the other array 
+				        System.arraycopy(this._genes, indexToMutate + 1, 
+				        				 new_genes, indexToMutate, 
+				                         this._genes.length - indexToMutate - 1); 
+				        System.arraycopy(this._subGenes, indexToMutate + 1, 
+				        			 	 new_subGenes, indexToMutate, 
+				        			 	 this._subGenes.length - indexToMutate - 1);
+				        new_genes[indexToMutate] = fusedSceneAndSubSceneIndex[0];
+				        new_subGenes[indexToMutate] = fusedSceneAndSubSceneIndex[1];
+				        this._genes = new_genes;
+				        this._subGenes = new_subGenes;
+				        this._numOfScenes -= 1;
+				        oneMutateHappen = true;
+					}
+				}
+				//option 4: mutate - lower mechanics = higher chance, must have mechanics that fired for lower
+				if (mutationChoice == 3 && oneMutateHappen != true) {
+					int[] weightedScene = this._library.getWeightedScene(sceneToMutate);
+					this._genes[indexToMutate] = weightedScene[0];
+					this._subGenes[indexToMutate] = weightedScene[1];
+					System.out.println("weightedScene: " + Arrays.toString(weightedScene));
+				}
+				
+				System.out.println("genes after: " + Arrays.toString(this._genes));
+				System.out.println("subGenes after: " + Arrays.toString(this._subGenes));
+				
+				//old mutation - simple mutation
+//				int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
+//				int indexToMutate = this._rnd.nextInt(this._genes.length);
+//				while(mutatedSceneIndex.contains(indexToMutate)) {
+//					indexToMutate = this._rnd.nextInt(this._genes.length);
+//				}
+//				mutatedSceneIndex.add(indexToMutate);
+//				this._genes[indexToMutate] = sceneIndex;
+//				this._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
 			}
 		}
 	}
@@ -671,10 +879,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 
 	public ChromosomeL mutate(int min, int max) {
 		ChromosomeL mutated = this.clone();
-		System.out.println("muated numOFScenes: " + mutated._numOfScenes);
-		System.out.println("mutated lentgth: " + mutated._genes.length);
-		int choice = mutated._rnd.nextInt(2);
-		//deleting a scene
+		int choice = mutated._rnd.nextInt(3);
+		System.out.println("choice: " + choice);
+		//deleting a scene11
 		if (choice == 0  && mutated._numOfScenes > min) {
 			System.out.println("Mutation - Deleting");
 			int indexToDelete = mutated._rnd.nextInt(mutated._genes.length);
@@ -720,13 +927,225 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			mutated._numOfScenes += 1;
 		}
 		//mutating a scene
+		//Select which scene to mutate: higher chance to pick scene with more mechanics fired
+		//From selected scene: replace, merge with either scene before or after split into 2
 		else {
 			System.out.println("Mutation - Mutating");
-			int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
-			int indexToMutate = mutated._rnd.nextInt(mutated._genes.length);
-			mutated._genes[indexToMutate] = sceneIndex;
-			mutated._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
+			boolean oneMutateHappen = false;
+			//which scene to mutate - higher chance to pick a scene with more mechanics fired
+			ArrayList<int[]> temp = new ArrayList<int[]>();
+			for(int i = 0; i < mutated._genes.length; i++) {
+				int singleGene = mutated._genes[i];
+				String mechanicTemp = mutated._library.getSceneMechanics(singleGene);
+				int num_mechanics_fired = ((int) mechanicTemp.chars().filter(num -> num == '1').count()) + 1;
+				for (int j = 0; j < num_mechanics_fired; j++) {
+					int[] t = new int[] {singleGene, i};
+					temp.add(t);
+				}
+			}
+			//shuffle the biased arrayList
+			Collections.shuffle(temp);
+			int weightSelected = mutated._rnd.nextInt(temp.size());
+			int indexToMutate = temp.get(weightSelected)[1];
+			int sceneToMutate = temp.get(weightSelected)[0];
+			//option 1: 
+			int mutationChoice = this._rnd.nextInt(4);
+			//option 1: split
+			if (mutationChoice == 0) {
+				System.out.println("\tSplitting");
+				String selectedSceneMechanics = mutated._library.getSceneMechanics(sceneToMutate);
+				ArrayList<Integer> bitsTurnedOnIndex = new ArrayList<Integer>();
+				for(int i = 0; i < selectedSceneMechanics.length(); i++){
+					if(selectedSceneMechanics.charAt(i) == '1'){
+						bitsTurnedOnIndex.add(i);
+					}
+				}
+				//too few mechanics, dont split, try another mutation field
+				if (bitsTurnedOnIndex.size() <  4) {
+					mutationChoice = mutated._rnd.nextInt(3) + 1;
+				}
+				else {
+					//split 50% -> go rng left and right
+					int split = bitsTurnedOnIndex.size()/2;
+					StringBuilder leftSceneToAdd = new StringBuilder("000000000000");
+					int addedLeft = 0;
+					StringBuilder rightSceneToAdd = new StringBuilder("000000000000");
+					int addedRight = 0;
+					for (int i = 0; i < bitsTurnedOnIndex.size(); i++) {
+						int leftOrRight = mutated._rnd.nextInt(2);
+						if ( (leftOrRight == 0 && addedLeft <= split) || addedRight == split) {
+							leftSceneToAdd.setCharAt(bitsTurnedOnIndex.get(i),'1');
+							addedLeft++;
+						} else {
+							rightSceneToAdd.setCharAt(bitsTurnedOnIndex.get(i),'1');
+							addedRight++;
+						}
+					}
+					//chance the split gave us something tht is not in lib, remove mechanics until it is
+					int[] leftSceneAndSubSceneIndex = mutated._library.getSceneIndex(leftSceneToAdd.toString());
+					int leftRemovingMechanics = 0;
+					while (leftSceneAndSubSceneIndex[0] == -1 || leftSceneAndSubSceneIndex[1] == -1) {
+						leftSceneToAdd.setCharAt(leftRemovingMechanics, '0');
+						leftRemovingMechanics++;
+						leftSceneAndSubSceneIndex = mutated._library.getSceneIndex(leftSceneToAdd.toString());
+					}
+					int[] rightSceneAndSubSceneIndex = mutated._library.getSceneIndex(rightSceneToAdd.toString());
+					int rightRemovingMechanics = 0;
+					while (rightSceneAndSubSceneIndex[0] == -1 || rightSceneAndSubSceneIndex[1] == -1) {
+						rightSceneToAdd.setCharAt(rightRemovingMechanics, '0');
+						rightRemovingMechanics++;
+						rightSceneAndSubSceneIndex = mutated._library.getSceneIndex(rightSceneToAdd.toString());
+					}
+					//chance both sides lost all mechanics
+					//try different mutation scene
+					if (rightSceneToAdd.toString().compareTo("000000000000") == 0 && leftSceneToAdd.toString().compareTo("000000000000") == 0) {
+						mutationChoice = this._rnd.nextInt(4) + 1;
+					}
+					else {
+						//adding the scene
+						int[] new_genes = new int[mutated._genes.length + 1]; 
+						int[] new_subGenes = new int[mutated._subGenes.length + 1];
+						for (int i = 0; i < new_genes.length; i++) {
+							if (i < indexToMutate) {
+								new_genes[i] = mutated._genes[i];
+								new_subGenes[i] = mutated._subGenes[i];
+							}
+							else if (i == indexToMutate){
+								new_genes[i] = leftSceneAndSubSceneIndex[0];
+								new_subGenes[i] = leftSceneAndSubSceneIndex[1];
+							}
+							else if (i == indexToMutate+1) {
+								new_genes[i] = rightSceneAndSubSceneIndex[0];
+								new_subGenes[i] = rightSceneAndSubSceneIndex[1];
+							}
+							else {
+								new_genes[i] = mutated._genes[i-1];
+								new_subGenes[i] = mutated._subGenes[i-1];
+							}
+						}
+						mutated._genes = new_genes;
+						mutated._subGenes = new_subGenes;
+						mutated._numOfScenes += 1;
+						oneMutateHappen = true;
+					}
+				}
+			}
+			//option 2: merge left
+			if (mutationChoice == 1 && indexToMutate > 1 && mutated._numOfScenes > min && oneMutateHappen != true) {
+				System.out.println("\tMerging Left");
+				StringBuilder fusionLeft = new StringBuilder("000000000000");
+				int indexLeft = indexToMutate - 1;
+				int sceneLeft = mutated._genes[indexLeft];
+				
+				String selectedSceneMechanics = mutated._library.getSceneMechanics(sceneToMutate);
+				String selectedLeftSceneMechanics = mutated._library.getSceneMechanics(sceneLeft);
+				
+				for(int i = 0; i < selectedSceneMechanics.length(); i++) {
+					if(selectedSceneMechanics.charAt(i) == '1' || selectedLeftSceneMechanics.charAt(i) == '1') {
+						fusionLeft.setCharAt(i, '1');
+					}
+				}
+				
+				//possible that the fusion scene is not in the scene library
+				//if it isnt then scratch and perform the final option, mutate
+				int[] fusedSceneAndSubSceneIndex = mutated._library.getSceneIndex(fusionLeft.toString());
+				if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
+					System.out.println("\tCould not do the merge left");
+					mutationChoice = 3;
+				} else {
+					int[] new_genes = new int[mutated._genes.length - 1]; 
+					int[] new_subGenes = new int[mutated._subGenes.length-1];
+					//copy elements from 0 to index
+					//from original array to the other array
+					System.arraycopy(mutated._genes, 0, new_genes, 0, indexToMutate); 
+					System.arraycopy(mutated._subGenes, 0, new_subGenes, 0, indexToMutate); 
+			        // Copy the elements from index + 1 till end 
+			        // from original array to the other array 
+			        System.arraycopy(mutated._genes, indexToMutate + 1, 
+			        				 new_genes, indexToMutate, 
+			        				 mutated._genes.length - indexToMutate - 1); 
+			        System.arraycopy(mutated._subGenes, indexToMutate + 1, 
+			        			 	 new_subGenes, indexToMutate, 
+			        			 	mutated._subGenes.length - indexToMutate - 1);
+			        new_genes[indexLeft] = fusedSceneAndSubSceneIndex[0];
+			        new_subGenes[indexLeft] = fusedSceneAndSubSceneIndex[1];
+			        mutated._genes = new_genes;
+			        mutated._subGenes = new_subGenes;
+			        mutated._numOfScenes -= 1;
+			        oneMutateHappen = true;
+				}
+			} else {
+				//want to merge left but couldn't, default to
+				System.out.println("\twant to merge left but couldn't, default to weighted mutating");
+				mutationChoice = 3;
+			}
+			//option 3: merge right
+			if (mutationChoice == 2 && indexToMutate < mutated._genes.length-2 && mutated._numOfScenes < max && oneMutateHappen != true) {
+				System.out.println("\tMerging Right");
+				StringBuilder fusionRight = new StringBuilder("000000000000");
+				int indexRight = indexToMutate + 1;
+				int sceneRight = mutated._genes[indexRight];
+				
+				String selectedSceneMechanics = mutated._library.getSceneMechanics(sceneToMutate);
+				String selectedLeftSceneMechanics = mutated._library.getSceneMechanics(sceneRight);
+				
+				for(int i = 0; i < selectedSceneMechanics.length(); i++) {
+					if(selectedSceneMechanics.charAt(i) == '1' || selectedLeftSceneMechanics.charAt(i) == '1') {
+						fusionRight.setCharAt(i, '1');
+					}
+				}
+				
+				//possible that the fusion scene is not in the scene library
+				//if it isnt then scratch and perform the final option, mutate
+				int[] fusedSceneAndSubSceneIndex = mutated._library.getSceneIndex(fusionRight.toString());
+				if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
+					System.out.println("\tCould not do the merge left");
+					mutationChoice = 3;
+				} else {
+					int[] new_genes = new int[mutated._genes.length - 1]; 
+					int[] new_subGenes = new int[mutated._subGenes.length-1];
+					//copy elements from 0 to index
+					//from original array to the other array
+					System.arraycopy(mutated._genes, 0, new_genes, 0, indexToMutate); 
+					System.arraycopy(mutated._subGenes, 0, new_subGenes, 0, indexToMutate); 
+			        // Copy the elements from index + 1 till end 
+			        // from original array to the other array 
+			        System.arraycopy(mutated._genes, indexToMutate + 1, 
+			        				 new_genes, indexToMutate, 
+			        				 mutated._genes.length - indexToMutate - 1); 
+			        System.arraycopy(mutated._subGenes, indexToMutate + 1, 
+			        			 	 new_subGenes, indexToMutate, 
+			        			 	mutated._subGenes.length - indexToMutate - 1);
+			        new_genes[indexToMutate] = fusedSceneAndSubSceneIndex[0];
+			        new_subGenes[indexToMutate] = fusedSceneAndSubSceneIndex[1];
+			        mutated._genes = new_genes;
+			        mutated._subGenes = new_subGenes;
+			        mutated._numOfScenes -= 1;
+			        oneMutateHappen = true;
+				}
+			} else {
+				//want to merge right but couldn't, default to
+				System.out.println("\twant to merge right but couldn't, default to weighted mutating");
+				mutationChoice = 3;
+			}
+			//option 4: mutate - lower mechanics = higher chance, must have mechanics that fired for lower
+			if (mutationChoice == 3 && oneMutateHappen != true) {
+				System.out.println("\tBiased Mutating");
+				int[] weightedScene = mutated._library.getWeightedScene(sceneToMutate);
+				System.out.println("\t\tindexToMutate: " + indexToMutate);
+				System.out.println("\t\tmutated._genes: " + Arrays.toString(mutated._genes));
+				System.out.println("\t\tmutated._genes.length: " + mutated._genes.length);
+				mutated._genes[indexToMutate] = weightedScene[0];
+				mutated._subGenes[indexToMutate] = weightedScene[1];
+			}
+			
+//			System.out.println("Mutation - Mutating");
+//			int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
+//			int indexToMutate = mutated._rnd.nextInt(mutated._genes.length);
+//			mutated._genes[indexToMutate] = sceneIndex;
+//			mutated._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
 		}
+		System.out.println("Finished mutate function\n");
 		return mutated;
 	}
 
@@ -820,24 +1239,6 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 		}
 		
-		
-//		ChromosomeL child = this.clone();
-//		int index1 = child._rnd.nextInt(child._genes.length);
-//		int index2 = child._rnd.nextInt(child._genes.length);
-//		while(index2 == index1) {
-//			index2 = child._rnd.nextInt(child._genes.length);
-//		}
-//		if (index1 > index2) {
-//			int temp = index2;
-//			index2 = index1;
-//			index1 = temp;
-//		}
-//		
-//		for (int i = index1; i < index2 + 1; i++) {
-//			child._genes[i] = c._genes[i];
-//			child._subGenes[i] = c._subGenes[i];
-//		}
-//		return child;
 	}
 
 	public String toString() {
