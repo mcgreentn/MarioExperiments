@@ -272,11 +272,11 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				int indexToMutate = temp.get(weightSelected)[1];
 				int sceneToMutate = temp.get(weightSelected)[0];
 				
-				System.out.println("indexToMutate: " + indexToMutate);
-				System.out.println("sceneToMutate: " + sceneToMutate);
-				System.out.println("sceneToMutateMechanics: " + this._library.getSceneMechanics(sceneToMutate));
-				System.out.println("genes before: " + Arrays.toString(this._genes));
-				System.out.println("subGenes before: " + Arrays.toString(this._subGenes));
+//				System.out.println("indexToMutate: " + indexToMutate);
+//				System.out.println("sceneToMutate: " + sceneToMutate);
+//				System.out.println("sceneToMutateMechanics: " + this._library.getSceneMechanics(sceneToMutate));
+//				System.out.println("genes before: " + Arrays.toString(this._genes));
+//				System.out.println("subGenes before: " + Arrays.toString(this._subGenes));
 				int mutationChoice = this._rnd.nextInt(4);
 				//option 1: split
 				if (mutationChoice == 0) {
@@ -451,11 +451,11 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 					int[] weightedScene = this._library.getWeightedScene(sceneToMutate);
 					this._genes[indexToMutate] = weightedScene[0];
 					this._subGenes[indexToMutate] = weightedScene[1];
-					System.out.println("weightedScene: " + Arrays.toString(weightedScene));
+//					System.out.println("weightedScene: " + Arrays.toString(weightedScene));
 				}
 				
-				System.out.println("genes after: " + Arrays.toString(this._genes));
-				System.out.println("subGenes after: " + Arrays.toString(this._subGenes));
+//				System.out.println("genes after: " + Arrays.toString(this._genes));
+//				System.out.println("subGenes after: " + Arrays.toString(this._subGenes));
 				
 				//old mutation - simple mutation
 //				int sceneIndex = this._rnd.nextInt(this._library.getNumberOfScenes());
@@ -543,7 +543,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		this._extraMechs = Double.parseDouble(parts[5]);
 		this._dimensions = new int[parts.length - 6];
 		for(int i=6; i<parts.length; i++) {
-			this._dimensions[i-3] = Integer.parseInt(parts[i]);
+			this._dimensions[i-6] = Integer.parseInt(parts[i]);
 		}
 	}
 
@@ -1130,9 +1130,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			if (mutationChoice == 3 && oneMutateHappen != true) {
 				System.out.println("\tBiased Mutating");
 				int[] weightedScene = mutated._library.getWeightedScene(sceneToMutate);
-				System.out.println("\t\tindexToMutate: " + indexToMutate);
-				System.out.println("\t\tmutated._genes: " + Arrays.toString(mutated._genes));
-				System.out.println("\t\tmutated._genes.length: " + mutated._genes.length);
+//				System.out.println("\t\tindexToMutate: " + indexToMutate);
+//				System.out.println("\t\tmutated._genes: " + Arrays.toString(mutated._genes));
+//				System.out.println("\t\tmutated._genes.length: " + mutated._genes.length);
 				mutated._genes[indexToMutate] = weightedScene[0];
 				mutated._subGenes[indexToMutate] = weightedScene[1];
 			}

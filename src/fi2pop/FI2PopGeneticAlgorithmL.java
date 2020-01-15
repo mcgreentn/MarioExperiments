@@ -262,6 +262,19 @@ public class FI2PopGeneticAlgorithmL {
 		}
 		resultWriter.close();
 	}
+	
+	public HashMap<Integer, Integer> getInterationsSceneLengths(){
+		HashMap<Integer, Integer> sceneLengthsMapping = new HashMap<Integer, Integer>();
+		for(int i=0; i<this._population.length; i++) {
+			int tempSceneLengthKey = this._population[i].getNumberOfScenes();
+			if (sceneLengthsMapping.containsKey(tempSceneLengthKey)) {
+				sceneLengthsMapping.put(tempSceneLengthKey, sceneLengthsMapping.get(tempSceneLengthKey)+1);
+			} else {
+				sceneLengthsMapping.put(tempSceneLengthKey, 1);
+			}
+		}
+		return sceneLengthsMapping;
+	}
 
 	public double[] getStatistics() {
 		int numFeasible = 0;
@@ -275,7 +288,7 @@ public class FI2PopGeneticAlgorithmL {
 		double extraMechs = 0;
 		double missingMechs = 0;
 		double matchMechs = 0;
-
+		double sceneLength = 0;
 		ChromosomeL[][] pop = this.getFeasibleInfeasible(true);
 		ChromosomeL[] feasible = pop[0];
 		ChromosomeL[] infeasible = pop[1];
@@ -291,13 +304,13 @@ public class FI2PopGeneticAlgorithmL {
 			extraMechs = feasible[0].getExtraMechs();
 			missingMechs = feasible[0].getMissingMechs();
 			matchMechs = feasible[0].getMatchMechs();
+			sceneLength = feasible[0].getNumberOfScenes();
 		}
 		ChromosomeL[] both = new ChromosomeL[feasible.length + infeasible.length];
 		System.arraycopy(feasible, 0, both, 0, feasible.length);
 		System.arraycopy(infeasible, 0, both, feasible.length, infeasible.length);
 		double[] distances = this.getPercentileDistances(both);
-		
-		//TODO Finish this
+
 		String distString = "";
 		for(int i = 0; i < distances.length; i++) {
 			distString += distances[i] + ",";
@@ -311,8 +324,7 @@ public class FI2PopGeneticAlgorithmL {
 			minConstraints = infeasible[numInfeasible - 1].getConstraints();
 			avgConstraints /= numInfeasible;
 		}
-		
-		double[] temp = {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs};
+		double[] temp = {numFeasible, maxFitness, avgFitness, minFitness, numInfeasible, maxConstraints, avgConstraints, minConstraints, matchMechs, missingMechs, extraMechs, sceneLength};
 		double[] stats = new double[temp.length + distances.length];
 		System.arraycopy(temp, 0, stats, 0, temp.length);
 		System.arraycopy(distances, 0, stats, temp.length, distances.length);

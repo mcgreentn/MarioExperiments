@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -178,6 +179,22 @@ public class FI2PopParentRunnerL {
 		result = result.substring(0, result.length() - 1);
 		pw.println("Batch number " + iteration + ": " + result);
 		pw.close();
+		//save the lengths for each generation in a new file
+		HashMap<Integer, Integer> currIterSceneLengths = gen.getInterationsSceneLengths();
+		String toPrint = "{";
+		ArrayList<Integer> keys = new ArrayList<>(currIterSceneLengths.keySet());
+		Collections.sort(keys);
+		for (int i = 0; i < keys.size(); i++) {
+			toPrint += keys.get(i) + ":" + currIterSceneLengths.get(keys.get(i));
+			if (i != keys.size()-1) {
+				toPrint += ",";
+			} else {
+				toPrint += "}";
+			}
+		}
+		PrintWriter pw_scenes = new PrintWriter(new FileOutputStream(new File(path + "allSceneLengthsDistribution.txt"), true));
+		pw_scenes.println("{ " + iteration + " : " + toPrint + " }");
+		pw_scenes.close();
 	}
 
 	public static void main(String[] args) {
