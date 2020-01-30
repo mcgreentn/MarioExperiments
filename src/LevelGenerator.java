@@ -18,18 +18,33 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import engine.core.MarioAgent;
 import engine.core.MarioGame;
 import fi2pop.FI2PopGeneticAlgorithmL;
 import shared.ChromosomeL;
 import shared.ScenesLibrary;
 import shared.evaluator.ParentEvaluator;
 
-public class FI2PopParentRunnerL {
-
+public class LevelGenerator {
+	private static ChromosomeL[] _population;
+	private static int _populationSize;
+	private static int _minChromosomeLength;
+	private static int _maxChromosomeLength;
+	private static int _appendingSize;
+	private double _crossover;
+	private double _mutation;
+	private int _elitism;
+	private static Random _rnd;
+	private static ScenesLibrary _lib;
+	private static String[] _playthroughMechanics;
+	private static boolean _variableNumOfMechInScene;
+	private static HashMap<String, String> _parameters;
+	
+	private static int num_levels_generated = 0;
+	
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
 		File directory = new File(scenesFolder);
 		File[] mechFolders = directory.listFiles();
@@ -50,7 +65,7 @@ public class FI2PopParentRunnerL {
 		}
 		return lib;
 	}
-
+	
 	private static HashMap<String, String> readParameters(String filename) throws IOException {
 		List<String> lines = Files.readAllLines(Paths.get("", filename));
 		HashMap<String, String> parameters = new HashMap<String, String>();
@@ -87,13 +102,12 @@ public class FI2PopParentRunnerL {
 				String value = obj.get(key).toString();
 				mechanicsArrayList.add(value);
 			}
-			System.out.println("mechanicsArrayList: " + mechanicsArrayList.size() );
+
 			//loop through array list and make the string mechanic of 0s and 1s
 			for(int i = 0; i < mechanicsArrayList.size(); i++) {
 				StringBuilder mechanicString = new StringBuilder("000000000000");
 				ArrayList<String> agentMechanics = new ArrayList<String>();
 				String mechInfo = mechanicsArrayList.get(i);
-//				System.out.println("mechInfo: " + mechInfo);
 				String starter = "Action\":\"";
 				while(mechInfo.indexOf(starter) != -1) {
 					int index = mechInfo.indexOf(starter);
@@ -103,7 +117,6 @@ public class FI2PopParentRunnerL {
 					agentMechanics.add(action);	
 					mechInfo = actionExcess.substring(actionStopIndex);
 				}
-				
 				for(int j = 0; j < agentMechanics.size(); j++) {
 					String triggeredMech = agentMechanics.get(j);
 					switch(triggeredMech) {
@@ -161,16 +174,65 @@ public class FI2PopParentRunnerL {
 		return toReturnStringArray;
 	}
 
-	private static void deleteDirectory(File directoryToBeDeleted) {
-		File[] allContents = directoryToBeDeleted.listFiles();
-		if (allContents != null) {
-			for (File file : allContents) {
-				deleteDirectory(file);
-			}
+	private static void runExperiment(ChromosomeL c) {
+		int runFixedRuns = 1;
+		MarioAgent[] agents = new MarioAgent[runFixedRuns];
+		for(int i = 0; i < agents.length; i++) {
+			agents[i] = new agents.robinBaumgarten.Agent();
 		}
-		directoryToBeDeleted.delete();
+		c.calculateResults(new MarioGame(), agents, 20);		
+	}	
+	public static void randomGuassChromosomesInitialize() {
+		_population = new ChromosomeL[_populationSize];
+		//popsize is 20 for 20 levels
+		
+		for(int i=0; i<_population.length; i++) {
+			int numOfScenes = _rnd.nextInt((_maxChromosomeLength - _minChromosomeLength) + 1) + _minChromosomeLength;
+			_population[i] = new ChromosomeL(_rnd, _lib, numOfScenes, _appendingSize, _playthroughMechanics, _variableNumOfMechInScene,_parameters);
+			
+			System.out.println("Making Guass playable level: " + i);
+			boolean winnable = false;
+			while(!winnable) {
+				System.out.println("\tTrial: " + num_levels_generated);
+				_population[i].randomGuassInitialization();
+				num_levels_generated += 1;
+				runExperiment(_population[i]);
+				if(_population[i].getConstraints() >=  1.0) {
+					System.out.println("Found a winnable level at least once");
+					winnable = true; 
+				}
+			}
+			_population[i].setAge(0);
+		}
+		//Save the number of tries it took to generate a level
+		System.out.println("Stats - num_levels_generated: " + num_levels_generated);
 	}
-
+	
+	public static void completeRandomInitialization() {
+		_population = new ChromosomeL[_populationSize];
+		//popsize is 20 for 20 levels
+		for(int i=0; i<_population.length; i++) {
+			int numOfScenes = _rnd.nextInt((_maxChromosomeLength - _minChromosomeLength) + 1) + _minChromosomeLength;
+			_population[i] = new ChromosomeL(_rnd, _lib, numOfScenes, _appendingSize, _playthroughMechanics, _variableNumOfMechInScene,_parameters);;
+			
+			System.out.println("Making Random playable level: " + i);
+			boolean winnable = false;
+			while(!winnable) {
+				System.out.println("\tTrial: " + num_levels_generated);
+				_population[i].completeRandomInitialization();
+				num_levels_generated += 1;
+				runExperiment(_population[i]);
+				if(_population[i].getConstraints() >=  1.0) {
+					System.out.println("Found a winnable level at least once");
+					winnable = true; 
+				}
+			}
+			_population[i].setAge(0);
+		}
+		//Save the number of tries it took to generate a level
+		System.out.println("Stats - num_levels_generated: " + num_levels_generated);
+	}
+	
 	private static void appendInfo(String path, int iteration, FI2PopGeneticAlgorithmL gen) throws FileNotFoundException {
 		double[] stats = gen.getStatistics();
 		PrintWriter pw = new PrintWriter(new FileOutputStream(new File(path + "result.txt"), true));
@@ -197,8 +259,25 @@ public class FI2PopParentRunnerL {
 		PrintWriter pw_scenes = new PrintWriter(new FileOutputStream(new File(path + "allSceneLengthsDistribution.txt"), true));
 		pw_scenes.println("{ " + iteration + " : " + toPrint + " }");
 		pw_scenes.close();
+		
+		PrintWriter pw_levels_made = new PrintWriter(new FileOutputStream(new File(path + "NumLevelsGenerated.txt"), true));
+		pw_levels_made.println("{ Num Levels Generated : " + num_levels_generated + " }");
+		pw_levels_made.close();
+		
+		System.out.println("appended Info");
+		
 	}
-
+	
+	private static void deleteDirectory(File directoryToBeDeleted) {
+		File[] allContents = directoryToBeDeleted.listFiles();
+		if (allContents != null) {
+			for (File file : allContents) {
+				deleteDirectory(file);
+			}
+		}
+		directoryToBeDeleted.delete();
+	}
+	
 	public static void main(String[] args) {
 		System.out.println("STARTING");
 		//get the parameters
@@ -208,7 +287,8 @@ public class FI2PopParentRunnerL {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
+//		Random rnd = new Random(Integer.parseInt(parameters.get("seed")));
+		Random rnd = new Random();
 		//create Scene library
 		ScenesLibrary lib = new ScenesLibrary(rnd);
 
@@ -217,61 +297,38 @@ public class FI2PopParentRunnerL {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		//create FI2Pop 		
-//		int appendingSize = Integer.parseInt(parameters.get("appendingSize"));
-//		int chromosomeLength = Integer.parseInt(parameters.get("chromosomeLength"));
-//		int popSize = Integer.parseInt(parameters.get("populationSize"));
-//		double crossover = Double.parseDouble(parameters.get("crossover"));
-//		double mutation = Double.parseDouble(parameters.get("mutation"));
-//		int elitism = Integer.parseInt(parameters.get("elitism"));
 		String playthroughMechanicsFolder = parameters.get("playthroughMechanicsFolder");
 		String playthroughMechanicsLevelName = parameters.get("playthroughMechanicsLevelName"); 
 		String[] playthroughMechanics = fillPlaythroughMechanics(playthroughMechanicsFolder+playthroughMechanicsLevelName);
 		
-		ArrayList<String> playthroughActions = new ArrayList<String>(Arrays.asList(playthroughMechanics));
-		System.out.println("playthroughActions.size(): " + playthroughActions.size());
-		int toReturn = 0;
-		for (int i = 0; i < playthroughActions.size(); i++) {
-			String temp = playthroughActions.get(i);
-			int keyWeight = ((int) temp.chars().filter(num -> num == '1').count());
-			toReturn += keyWeight;
-		}
-		System.out.println("playthroughActions: " + toReturn);
-		
-		Set<String> set = new HashSet<String>(playthroughActions);
-		System.out.println("Number of Scenes: " + set.size());
-		for (String temp : set){
-        	System.out.println(temp);
-        }
-		
-//		boolean variableNumberOfMechanics = Boolean.parseBoolean(parameters.get("variableNumberOfMechanics"));
-		System.out.println("Initialize FI2Pop");
+		_parameters = parameters;
+		_lib = lib;
+		_populationSize = Integer.parseInt(_parameters.get("populationSize"));
+		_minChromosomeLength = Integer.parseInt(_parameters.get("minChromosomeLength"));
+		_maxChromosomeLength = Integer.parseInt(_parameters.get("maxChromosomeLength"));
+		_appendingSize = Integer.parseInt(_parameters.get("appendingSize"));
+		_rnd = rnd;
+		_population = new ChromosomeL[0];
+		_playthroughMechanics = playthroughMechanics;
+		_variableNumOfMechInScene = Boolean.parseBoolean(_parameters.get("variableNumberOfMechanics"));
+
 		FI2PopGeneticAlgorithmL gen = new FI2PopGeneticAlgorithmL(lib, rnd, playthroughMechanics, parameters);
 		ParentEvaluator parent = new ParentEvaluator(parameters.get("inputFolder"), parameters.get("outputFolder"));
+		
 		String typeOfInitialization = parameters.get("initialization");
-		System.out.println("First Batch of Chromosomes " + typeOfInitialization);
-		if(typeOfInitialization.equals("smart")) {
-			gen.smartChomosomesInitialize();
-		}
-		else if (typeOfInitialization.equals("randguass")) {
-			gen.randomGuassChromosomesInitialize();
+		if (typeOfInitialization.equals("randguass")) {
+			randomGuassChromosomesInitialize();
+			gen.setPopulation(_population);
 		}
 		else if (typeOfInitialization.contentEquals("totalrandom")) {
-			gen.completeRandomInitialization();
-		}
-		else {
-			gen.randomChromosomesInitialize();
+			completeRandomInitialization();
+			gen.setPopulation(_population);
 		}
 		ChromosomeL[] chromosomes = gen.getPopulation();
 		int iteration = 0;
 		int maxIterations = Integer.parseInt(parameters.get("maxIterations"));
-
 		while(true) {
 			try {
-				System.out.println("Generation " + iteration);
-				// TODO: get the diversity of the population
-				
 				String[] levels = new String[chromosomes.length];
 				for(int i=0; i<chromosomes.length; i++) {
 					levels[i] = chromosomes[i].getAge() + "," + chromosomes[i].getNumberOfScenes() + "\n";
@@ -290,7 +347,6 @@ public class FI2PopParentRunnerL {
 				for(int i=0; i<chromosomes.length; i++) {
 					chromosomes[i].childEvaluationInitialization(values[i]);
 				}
-				
 				System.out.println("\tWriting results");
 				File f = new File(parameters.get("resultFolder") + iteration + "/");
 				f.mkdir();
@@ -301,33 +357,13 @@ public class FI2PopParentRunnerL {
 					System.out.println("Done! iteration: " + iteration + "; maxIterations: " + maxIterations);
 					break;
 				}
-				System.out.println("\tGenerate Next Population");
-				gen.getNextGeneration();
-				chromosomes = gen.getPopulation();
-				
-				
-				iteration += 1;
 			} catch (Exception e) {
 				System.err.println("Err Iter: " + iteration);
 				System.err.println("Err chromosomes.length: " + chromosomes.length);
 				e.printStackTrace();
 			}	
 		}
-//		for(int i=0; i<chromosomes.length; i++) {
-//			System.out.println("\tChild: "+ chromosomes[i].getAge() +
-//					"; Fitness: " + chromosomes[i].getFitness() + 
-//					"; Constraint: " + chromosomes[i].getConstraints() +
-//					"\n"+ chromosomes[i].getGenes());
-//		}
-		try {
-			parent.clearOutputFiles(chromosomes.length);
-		} catch (Exception e) {
-			System.err.println("Could not clear the final output files");
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("DONE");
+		
 	}
-
 
 }

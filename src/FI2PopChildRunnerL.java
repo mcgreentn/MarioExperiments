@@ -26,26 +26,35 @@ import shared.evaluator.ChildEvaluator;
 public class FI2PopChildRunnerL {
 
 	private static void runExperiment(ChromosomeL c, HashMap<String, String> parameters) {
-		if(c.getAge() == 1 || c.getAge() == 0) {
-			int playthroughCount = Integer.parseInt(parameters.get("playthroughCount"));
-			MarioAgent[] marioAgents = new MarioAgent[playthroughCount];
-			for(int i = 0; i < playthroughCount; i++) {
-				marioAgents[i] = new agents.robinBaumgarten.Agent();
-			}
-			
-			c.calculateResults(new MarioGame(), marioAgents, 20);
+		int runFixedRuns = 5;
+		MarioAgent[] agents = new MarioAgent[runFixedRuns];
+		for(int i = 0; i < agents.length; i++) {
+			agents[i] = new agents.robinBaumgarten.Agent();
 		}
-		else if (c.getAge() > 1) {
-			MarioAgent[] agents = new MarioAgent[c.getAge()];
-			for(int i = 0; i < agents.length; i++) {
-				agents[i] = new agents.robinBaumgarten.Agent();
-			}
-			c.calculateResults(new MarioGame(), agents, 20);
-		}
-		else {
-			System.out.println("ISSUE WITH THE AGE OF A CHROMOSOME: ITS AGE IS " + c.getAge());
-			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
-		}
+		c.calculateResults(new MarioGame(), agents, 20);
+//		c.setAge(10);
+//		if(c.getAge() == 1 || c.getAge() == 0) {
+//			int playthroughCount = Integer.parseInt(parameters.get("playthroughCount"));
+//			MarioAgent[] marioAgents = new MarioAgent[playthroughCount];
+//			for(int i = 0; i < playthroughCount; i++) {
+//				marioAgents[i] = new agents.robinBaumgarten.Agent();
+//			}
+//			
+//			c.calculateResults(new MarioGame(), marioAgents, 20);
+//		}
+//		else if (c.getAge() > 1) {
+//			MarioAgent[] agents = new MarioAgent[c.getAge()];
+//			for(int i = 0; i < agents.length; i++) {
+//				agents[i] = new agents.robinBaumgarten.Agent();
+//			}
+//			c.calculateResults(new MarioGame(), agents, 20);
+//		}
+//		else {
+//			System.out.println("ISSUE WITH THE AGE OF A CHROMOSOME: ITS AGE IS " + c.getAge());
+//			c.calculateResults(new MarioGame(), new agents.robinBaumgarten.Agent(), 20);
+//		}
+		
+		
 	}
 
 	public static ScenesLibrary fillLibrary(ScenesLibrary lib, String scenesFolder) throws Exception {
@@ -251,7 +260,6 @@ public class FI2PopChildRunnerL {
 					index++;
 					runExperiment(c, parameters);
 				}
-				child.clearInputFiles();
 				System.out.println("Writing Chromosomes results.");
 				String[] values = new String[chromosomes.length];
 				for(int i=0; i<values.length; i++) {
@@ -260,7 +268,9 @@ public class FI2PopChildRunnerL {
 					values[i] += chromosomes[i].toString() + "\n";
 				}
 				child.writeResults(values);
-				if(maxIterations > 0 && iteration >= maxIterations) {
+				System.out.println("Deleting input files for child");
+				child.clearInputFiles();
+				if(iteration >= maxIterations) {
 					System.out.println("Done! iteration: " + iteration + "; maxIterations: " + maxIterations);
 					break;
 				}

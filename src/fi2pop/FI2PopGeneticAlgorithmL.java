@@ -58,7 +58,29 @@ public class FI2PopGeneticAlgorithmL {
 	public ChromosomeL[] getPopulation() {
 		return this._population;
 	}
+	
+	public void setPopulation(ChromosomeL[] pop) {
+		this._population = pop;
+	}
 
+	public void randomGuassChromosomesInitialize() {
+		this._population = new ChromosomeL[this._populationSize];
+		for(int i=0; i<this._population.length; i++) {
+			int numOfScenes = this._rnd.nextInt((this._maxChromosomeLength - this._minChromosomeLength) + 1) + this._minChromosomeLength;
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+			this._population[i].randomGuassInitialization();
+		}
+	}
+	
+	public void completeRandomInitialization() {
+		this._population = new ChromosomeL[this._populationSize];
+		for(int i=0; i<this._population.length; i++) {
+			int numOfScenes = this._rnd.nextInt((this._maxChromosomeLength - this._minChromosomeLength) + 1) + this._minChromosomeLength;
+			this._population[i] = new ChromosomeL(this._rnd, this._lib, numOfScenes, this._appendingSize, this._playthroughMechanics, this._variableNumOfMechInScene, this._parameters);
+			this._population[i].completeRandomInitialization();
+		}
+	}
+	
 	public void randomChromosomesInitialize() {
 		this._population = new ChromosomeL[this._populationSize];
 		for(int i=0; i<this._population.length; i++) {

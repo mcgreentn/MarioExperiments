@@ -31,6 +31,10 @@ public class ParentEvaluator {
 			if(!f.exists()) {
 				return false;
 			}
+			File f2 = new File(this._inputFolder + i + ".txt");
+			if(f2.exists()) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -43,10 +47,15 @@ public class ParentEvaluator {
 		return results;
 	}
 
-	public void clearOutputFiles(int size) {
+	public void clearOutputFiles(int size) throws Exception {
 		for(int i=0; i<size; i++) {
 			File f = new File(this._outputFolder + i + ".txt");
-			f.delete();
+			if(f.delete()) {
+				System.out.println("Deleted " + this._outputFolder + (i) + ".txt" + " successfully"); 
+			} else { 
+	            System.out.println("Failed to delete " + this._outputFolder + (i) + ".txt"); 
+	            Files.deleteIfExists(Paths.get(this._outputFolder, (i) + ".txt"));
+	        } 
 		}
 	}
 }

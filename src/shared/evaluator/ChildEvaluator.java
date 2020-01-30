@@ -28,6 +28,10 @@ public class ChildEvaluator {
 			if(!file.exists()) {
 				return false;
 			}
+			File file2 = new File(this._outputFolder + (startIndex + i) + ".txt");
+			if(file2.exists()) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -61,11 +65,16 @@ public class ChildEvaluator {
 		}
 	}
 
-	public void clearInputFiles() {
+	public void clearInputFiles() throws Exception {
 		int startIndex = this._id * this._size;
 		for(int i=0; i<this._size; i++) {
 			File f = new File(this._inputFolder + (startIndex + i) + ".txt");
-			f.delete();
+			if(f.delete()) {
+				System.out.println("Deleted " + this._inputFolder + (startIndex + i) + ".txt" + " successfully"); 
+			} else { 
+	            System.out.println("Failed to delete " + this._inputFolder + (startIndex + i) + ".txt"); 
+	            Files.delete(Paths.get(this._inputFolder, (startIndex + i) + ".txt"));
+	        } 
 		}
 	}
 }

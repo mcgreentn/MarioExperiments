@@ -116,6 +116,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public int getAge() {
 		return this._age;
 	}
+	public void setAge (int newAge) {
+		this._age = newAge;
+	}
 	public int[] getDimensions() {
 		return this._dimensions;
 	}
@@ -196,10 +199,43 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		if(avg_mechanics > 10) {
 			avg_mechanics = 7;
 		}
-		if(!this._variableNumOfMechInScene || avg_mechanics < 0) {
+		if(avg_mechanics < 0) {
+			avg_mechanics = 0;
+		}
+		if(!this._variableNumOfMechInScene) {
 			avg_mechanics = 3;
 		}
+
 		this.createGeneRandomly(i, avg_mechanics);
+	}
+	
+	public void completeRandomInitialization() {
+		for(int i = 0; i < this._genes.length; i++) {
+			int avg_mechanics = this._rnd.nextInt(11); //make number of mechanics in single scene is 10
+			if(avg_mechanics < 0) {
+				avg_mechanics = 0;
+			}
+			this.createGeneRandomly(i, avg_mechanics);
+		}
+	}
+	
+	public void randomGuassInitialization() {
+		int avg_mechanics = calcAvgMechanics();
+		//create the genes
+		//every scene (aka gene) will have a avg+mechanics amount
+		int i;
+		for(i = 0; i < this._genes.length; i++) {
+			double guass_noise = this._rnd.nextGaussian();
+			int num_mechanics = (int) Math.floor(avg_mechanics+guass_noise);
+//			System.out.println("Num of mechanics for Scene: " + i + " is " + num_mechanics);
+			//fix the range
+			if (num_mechanics > 10) {
+				num_mechanics = 10;
+			} else if (num_mechanics < 0) {
+				num_mechanics = 0;
+			}
+			this.createGeneRandomly(i, num_mechanics);
+		}
 	}
 	
 	public void mutatedSmartInitialization(int min, int max) {
@@ -251,9 +287,9 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		else {
 			Set<Integer> mutatedSceneIndex = new HashSet<Integer> ();
 			int num_scenes_mutate = (int)(0.3 * this._numOfScenes);
-			System.out.println("~~~~NEW ONE~~~~~");
+//			System.out.println("~~~~NEW ONE~~~~~");
 			for(int _i = 0; _i < num_scenes_mutate; _i++) {
-				System.out.println("MUTATING SCENE: " + _i);
+//				System.out.println("MUTATING SCENE: " + _i);
 				boolean oneMutateHappen = false;
 				//which scene to mutate - higher chance to pick a scene with more mechanics fired
 				ArrayList<int[]> temp = new ArrayList<int[]>();
@@ -549,32 +585,58 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 
 	protected MarioResult[] runAlgorithms(MarioGame[] games, MarioAgent[] agents, int maxTime) {
 		MarioResult[] results = new MarioResult[agents.length];
+//		long allRunsStart = System.nanoTime();
 		for(int i=0; i<agents.length; i++) {
 			//			System.out.println("\t Start playing game");
+//			long startTime = System.nanoTime();
 			results[i] = games[i].runGame(agents[i], this.toString(), maxTime);
 			//			System.out.println("\t Finish playing game");
+//			long endTime = System.nanoTime();
+//			long elapsedTime = endTime - startTime;
+//			System.out.println("Run " + i + " time: " + elapsedTime/1_000_000_000);
 		}
+//		long allRunsEnd = System.nanoTime();
+//		long allRunsTime = allRunsEnd - allRunsStart;
+//		System.out.println("Total Run Time: " + allRunsTime/1_000_000_000);
 		return results;
 	}
 
 	private void calculateConstraints(MarioResult[] runs) {
 		double avgConst = 0;
-		boolean flag = false;
-
+		double completeRuns = 0;
 		for (MarioResult run : runs) {
 			double tempConst = run.getCompletionPercentage();
 			if (tempConst >= 1) {
-				flag = true;
-				this._constraints = 1.0;
-				break;
+				completeRuns += 1.0;
 			}
-			else
-				avgConst += tempConst;
+			avgConst += tempConst;
 		}
-		if (!flag) {
-			avgConst /= runs.length;
-			this._constraints = avgConst;
+		completeRuns = Math.min(1, (completeRuns / runs.length) / 0.5);
+		if (completeRuns >= 1) {
+		  this._constraints = 1;
 		}
+		else{
+		  avgConst /= runs.length;
+		  this._constraints = avgConst;
+		}
+		
+//		double avgConst = 0;
+//		boolean flag = false;
+//
+//		for (MarioResult run : runs) {
+//			double tempConst = run.getCompletionPercentage();
+//			if (tempConst >= 1) {
+//				flag = true;
+//				this._constraints = 1.0;
+//				break;
+//			}
+//			else
+//				avgConst += tempConst;
+//		}
+//		if (!flag) {
+//			avgConst /= runs.length;
+//			this._constraints = avgConst;
+//		}
 			/*
 			tempConst = runs[1].getCompletionPercentage() - tempConst;
 			if(runs[1].getGameStatus() == GameStatus.WIN && runs[2].getGameStatus() == GameStatus.LOSE) {
@@ -795,23 +857,63 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		
 		return list;
 	}
+	
+	public int numberFiredMechanics(MarioResult run) {
+		//reduce the lists to just actions
+		String[] agentMechanicsArrayExcess = EventLogger.getPlayedMechanics(run.getGameEvents());		
+		ArrayList<String> agentActions = this.reduceMechanicsToActions(agentMechanicsArrayExcess);
+		int toReturn = 0;
+		for (int i = 0; i < agentActions.size(); i++) {
+			String temp = agentActions.get(i);
+			int keyWeight = ((int) temp.chars().filter(num -> num == '1').count());
+			toReturn += keyWeight;
+		}
+		return toReturn;
+	}
+	
 	public void calculateFitnessEntropy(MarioResult[] runs) {
-		ArrayList<Double> sourceList = this.calculateFitness(runs[0]);
+		//pick the run with the least fired mechanics
+		int indexOfLeastFiredMechanicsRun = 0;
+		int firedMechanics = numberFiredMechanics(runs[0]);
+		for (int i = 1; i < runs.length; i++) {
+			double tempConst = runs[i].getCompletionPercentage();
+			if (tempConst >= 1.0) {
+				int tempFiredMechanics = numberFiredMechanics(runs[i]);
+				if (tempFiredMechanics < firedMechanics) {
+					firedMechanics = tempFiredMechanics;
+					indexOfLeastFiredMechanicsRun = i;
+				}
+			}
+		}
+		//found the run that is winnable with least number of mechanics fired
+		ArrayList<Double> sourceList = this.calculateFitness(runs[indexOfLeastFiredMechanicsRun]);
 		double score = sourceList.get(0);
 		double matchMechs = sourceList.get(1);
 		double missingMechs = sourceList.get(2);
 		double extraMechs = sourceList.get(3);
-		for(int i = 1; i < runs.length; i++) {
-			ArrayList<Double> sl = this.calculateFitness(runs[i]);
-			score += sl.get(0);
-			matchMechs += sl.get(1);
-			missingMechs += sl.get(2);
-			extraMechs += sl.get(3);	
-		}
-		this._fitness = score / (double)runs.length;
-		this._matchMechs = matchMechs / (double)runs.length;
-		this._missingMechs = missingMechs / (double)runs.length;
-		this._extraMechs = extraMechs / (double)runs.length;
+
+		this._fitness = score;
+		this._matchMechs = matchMechs;
+		this._missingMechs = missingMechs;
+		this._extraMechs = extraMechs;
+		
+
+//		ArrayList<Double> sourceList = this.calculateFitness(runs[0]);
+//		double score = sourceList.get(0);
+//		double matchMechs = sourceList.get(1);
+//		double missingMechs = sourceList.get(2);
+//		double extraMechs = sourceList.get(3);
+//		for(int i = 1; i < runs.length; i++) {
+//			ArrayList<Double> sl = this.calculateFitness(runs[i]);
+//			score += sl.get(0);
+//			matchMechs += sl.get(1);
+//			missingMechs += sl.get(2);
+//			extraMechs += sl.get(3);	
+//		}
+//		this._fitness = score / (double)runs.length;
+//		this._matchMechs = matchMechs / (double)runs.length;
+//		this._missingMechs = missingMechs / (double)runs.length;
+//		this._extraMechs = extraMechs / (double)runs.length;
 	}
 
 	//since map elites uses 1 game with 1 agent, we only need the first result
@@ -846,7 +948,11 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 
 	public void calculateResults(MarioGame[] games, MarioAgent[] agents, int maxTime) {
 		MarioGame game = new MarioGame();
+//		long fallKillsStart = System.nanoTime();
 		int fallKills = game.runGame(new agents.doNothing.Agent(), this.toString(), maxTime).getKillsByFall();
+//		long fallKillsEnd = System.nanoTime();
+//		double fallEndTime = (double) (fallKillsEnd - fallKillsStart)/ 1_000_000_000;
+//		System.out.println("fallKillsTotalTime: " + fallEndTime);
 		MarioResult[] runs = this.runAlgorithms(games, agents, maxTime);
 		this.calculateConstraints(runs);
 		this._age += 1;
@@ -880,10 +986,10 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 	public ChromosomeL mutate(int min, int max) {
 		ChromosomeL mutated = this.clone();
 		int choice = mutated._rnd.nextInt(3);
-		System.out.println("choice: " + choice);
+//		System.out.println("choice: " + choice);
 		//deleting a scene11
 		if (choice == 0  && mutated._numOfScenes > min) {
-			System.out.println("Mutation - Deleting");
+//			System.out.println("Mutation - Deleting");
 			int indexToDelete = mutated._rnd.nextInt(mutated._genes.length);
 			int[] new_genes = new int[mutated._genes.length - 1]; 
 			int[] new_subGenes = new int[mutated._subGenes.length-1];
@@ -903,7 +1009,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		}
 		//adding a scene
 		else if(choice == 1 && mutated._numOfScenes < max) {
-			System.out.println("Mutation - Adding");
+//			System.out.println("Mutation - Adding");
 			int sceneIndex = mutated._rnd.nextInt(mutated._library.getNumberOfScenes());
 			int indexToAdd = mutated._rnd.nextInt(mutated._genes.length);
 			int[] new_genes = new int[mutated._genes.length + 1]; 
@@ -930,7 +1036,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 		//Select which scene to mutate: higher chance to pick scene with more mechanics fired
 		//From selected scene: replace, merge with either scene before or after split into 2
 		else {
-			System.out.println("Mutation - Mutating");
+//			System.out.println("Mutation - Mutating");
 			boolean oneMutateHappen = false;
 			//which scene to mutate - higher chance to pick a scene with more mechanics fired
 			ArrayList<int[]> temp = new ArrayList<int[]>();
@@ -952,7 +1058,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			int mutationChoice = this._rnd.nextInt(4);
 			//option 1: split
 			if (mutationChoice == 0) {
-				System.out.println("\tSplitting");
+//				System.out.println("\tSplitting");
 				String selectedSceneMechanics = mutated._library.getSceneMechanics(sceneToMutate);
 				ArrayList<Integer> bitsTurnedOnIndex = new ArrayList<Integer>();
 				for(int i = 0; i < selectedSceneMechanics.length(); i++){
@@ -1032,7 +1138,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			//option 2: merge left
 			if (mutationChoice == 1 && indexToMutate > 1 && mutated._numOfScenes > min && oneMutateHappen != true) {
-				System.out.println("\tMerging Left");
+//				System.out.println("\tMerging Left");
 				StringBuilder fusionLeft = new StringBuilder("000000000000");
 				int indexLeft = indexToMutate - 1;
 				int sceneLeft = mutated._genes[indexLeft];
@@ -1050,7 +1156,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				//if it isnt then scratch and perform the final option, mutate
 				int[] fusedSceneAndSubSceneIndex = mutated._library.getSceneIndex(fusionLeft.toString());
 				if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
-					System.out.println("\tCould not do the merge left");
+//					System.out.println("\tCould not do the merge left");
 					mutationChoice = 3;
 				} else {
 					int[] new_genes = new int[mutated._genes.length - 1]; 
@@ -1080,7 +1186,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			//option 3: merge right
 			if (mutationChoice == 2 && indexToMutate < mutated._genes.length-2 && mutated._numOfScenes < max && oneMutateHappen != true) {
-				System.out.println("\tMerging Right");
+//				System.out.println("\tMerging Right");
 				StringBuilder fusionRight = new StringBuilder("000000000000");
 				int indexRight = indexToMutate + 1;
 				int sceneRight = mutated._genes[indexRight];
@@ -1098,7 +1204,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 				//if it isnt then scratch and perform the final option, mutate
 				int[] fusedSceneAndSubSceneIndex = mutated._library.getSceneIndex(fusionRight.toString());
 				if (fusedSceneAndSubSceneIndex[0] == -1 || fusedSceneAndSubSceneIndex[1] == -1) {
-					System.out.println("\tCould not do the merge left");
+//					System.out.println("\tCould not do the merge left");
 					mutationChoice = 3;
 				} else {
 					int[] new_genes = new int[mutated._genes.length - 1]; 
@@ -1128,7 +1234,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 			}
 			//option 4: mutate - lower mechanics = higher chance, must have mechanics that fired for lower
 			if (mutationChoice == 3 && oneMutateHappen != true) {
-				System.out.println("\tBiased Mutating");
+//				System.out.println("\tBiased Mutating");
 				int[] weightedScene = mutated._library.getWeightedScene(sceneToMutate);
 //				System.out.println("\t\tindexToMutate: " + indexToMutate);
 //				System.out.println("\t\tmutated._genes: " + Arrays.toString(mutated._genes));
@@ -1143,7 +1249,7 @@ public class ChromosomeL implements Comparable<ChromosomeL>{
 //			mutated._genes[indexToMutate] = sceneIndex;
 //			mutated._subGenes[indexToMutate] = this._library.getSubSceneIndex(sceneIndex);
 		}
-		System.out.println("Finished mutate function\n");
+//		System.out.println("Finished mutate function\n");
 		return mutated;
 	}
 

@@ -1,13 +1,13 @@
-seed = 1023124
-populationSize = 30
+seed = 30339
+populationSize = 2
 chromosomeLength = 14
 appendingSize = 2
 crossover = 0.7
 mutation = 0.2
 elitism = 1
 variableNumberOfMechanics = true
-initialization = smart
-maxIterations = 2
+initialization = randguass
+maxIterations = 0
 minChromosomeLength = 5
 maxChromosomeLength = 25
 scenesFolder = scenelibrary/
