@@ -1,12 +1,12 @@
 seed = 30339
-populationSize = 2
+populationSize = 20
 chromosomeLength = 14
 appendingSize = 2
 crossover = 0.7
 mutation = 0.2
 elitism = 1
 variableNumberOfMechanics = true
-initialization = randguass
+initialization = smart
 maxIterations = 0
 minChromosomeLength = 5
 maxChromosomeLength = 25

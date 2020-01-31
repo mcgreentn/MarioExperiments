@@ -182,6 +182,30 @@ public class LevelGenerator {
 		}
 		c.calculateResults(new MarioGame(), agents, 20);		
 	}	
+	
+	public static void smartChomosomesInitialize() {
+		_population = new ChromosomeL[_populationSize];
+		for(int i=0; i<_population.length; i++) {
+			int numOfScenes = _rnd.nextInt((_maxChromosomeLength - _minChromosomeLength) + 1) + _minChromosomeLength;
+			_population[i] = new ChromosomeL(_rnd, _lib, numOfScenes, _appendingSize, _playthroughMechanics, _variableNumOfMechInScene,_parameters);
+			System.out.println("Making Greedy playable level: " + i);
+			boolean winnable = false;
+			while(!winnable) {
+				System.out.println("\tTrial: " + num_levels_generated);
+				_population[i].smartInitialization();
+				num_levels_generated += 1;
+				runExperiment(_population[i]);
+				if(_population[i].getConstraints() >=  1.0) {
+					System.out.println("Found a winnable level at least once");
+					winnable = true; 
+				}
+			}
+			_population[i].setAge(0);
+		}
+		//Save the number of tries it took to generate a level
+		System.out.println("Stats - num_levels_generated: " + num_levels_generated);
+	}
+	
 	public static void randomGuassChromosomesInitialize() {
 		_population = new ChromosomeL[_populationSize];
 		//popsize is 20 for 20 levels
@@ -316,8 +340,8 @@ public class LevelGenerator {
 		ParentEvaluator parent = new ParentEvaluator(parameters.get("inputFolder"), parameters.get("outputFolder"));
 		
 		String typeOfInitialization = parameters.get("initialization");
-		if (typeOfInitialization.equals("randguass")) {
-			randomGuassChromosomesInitialize();
+		if(typeOfInitialization.equals("smart")) {
+			smartChomosomesInitialize();
 			gen.setPopulation(_population);
 		}
 		else if (typeOfInitialization.contentEquals("totalrandom")) {
